@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Gora</string>
+    <string name="title_activity_main">Gora</string>
+    <string name="package_name">com.garuda.gora</string>
+    <string name="custom_url_scheme">com.garuda.gora</string>
+</resources>
