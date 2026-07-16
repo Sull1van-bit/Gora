@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Geolocation } from '@capacitor/geolocation';
 
-@returns {{ provinsi, kecamatan, loading, error, refetch }}
+/** @returns {{ provinsi: string|null, kecamatan: string|null, loading: boolean, error: string|null, refetch: () => void }} */
 
 export default function useUserLocation() {
   const [provinsi, setProvinsi] = useState(null);
