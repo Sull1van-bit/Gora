@@ -1,7 +1,7 @@
-import AuthPlayground from './components/AuthPlayground'
+import HomePage from './components/HomePage'
 
 function App() {
-  return <AuthPlayground />
+  return <HomePage />
 }
 
 export default App
