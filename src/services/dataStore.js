@@ -9,7 +9,7 @@ export const INITIAL_KOMODITAS = [
 
 export const INITIAL_PLOTS = [
   {
-    id: 'plot-1',
+    id: '11111111-1111-1111-1111-111111111111',
     plot_name: 'Plot A - Lahan Utama',
     komoditas_id: 'kom-1',
     komoditas_nama: 'Tomat (Tomato)',
@@ -28,7 +28,7 @@ export const INITIAL_PLOTS = [
     updated_at: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
   },
   {
-    id: 'plot-2',
+    id: '22222222-2222-2222-2222-222222222222',
     plot_name: 'Plot B - Lereng Selatan',
     komoditas_id: 'kom-2',
     komoditas_nama: 'Cabai Merah (Chili)',
@@ -47,7 +47,7 @@ export const INITIAL_PLOTS = [
     updated_at: new Date(Date.now() - 1000 * 60 * 120).toISOString(),
   },
   {
-    id: 'plot-3',
+    id: '33333333-3333-3333-3333-333333333333',
     plot_name: 'Plot C - Lembah Sejuk',
     komoditas_id: 'kom-3',
     komoditas_nama: 'Padi (Rice)',
@@ -66,7 +66,7 @@ export const INITIAL_PLOTS = [
     updated_at: new Date(Date.now() - 1000 * 60 * 240).toISOString(),
   },
   {
-    id: 'plot-4',
+    id: '44444444-4444-4444-4444-444444444444',
     plot_name: 'Plot D - Kebun Atas',
     komoditas_id: 'kom-5',
     komoditas_nama: 'Bawang Merah (Shallot)',
@@ -88,8 +88,8 @@ export const INITIAL_PLOTS = [
 
 export const INITIAL_ACTIONS = [
   {
-    id: 'act-1',
-    plot_id: 'plot-1',
+    id: 'aaaa1111-1111-1111-1111-111111111111',
+    plot_id: '11111111-1111-1111-1111-111111111111',
     plot_name: 'Plot A - Lahan Utama',
     komoditas_icon: 'tomato',
     title: 'Siram Tanaman (Watering)',
@@ -100,8 +100,8 @@ export const INITIAL_ACTIONS = [
     activity_type: 'Watering',
   },
   {
-    id: 'act-2',
-    plot_id: 'plot-2',
+    id: 'aaaa2222-2222-2222-2222-222222222222',
+    plot_id: '22222222-2222-2222-2222-222222222222',
     plot_name: 'Plot B - Lereng Selatan',
     komoditas_icon: 'chili',
     title: 'Pupuk Susulan NPK (Fertilize)',
@@ -112,8 +112,8 @@ export const INITIAL_ACTIONS = [
     activity_type: 'Fertilizing',
   },
   {
-    id: 'act-3',
-    plot_id: 'plot-1',
+    id: 'aaaa3333-3333-3333-3333-333333333333',
+    plot_id: '11111111-1111-1111-1111-111111111111',
     plot_name: 'Plot A - Lahan Utama',
     komoditas_icon: 'tomato',
     title: 'Inspeksi Hama Kutu Putih (Pest Check)',
@@ -124,8 +124,8 @@ export const INITIAL_ACTIONS = [
     activity_type: 'Pest Inspection',
   },
   {
-    id: 'act-4',
-    plot_id: 'plot-3',
+    id: 'aaaa4444-4444-4444-4444-444444444444',
+    plot_id: '33333333-3333-3333-3333-333333333333',
     plot_name: 'Plot C - Lembah Sejuk',
     komoditas_icon: 'rice',
     title: 'Pembersihan Gulma (Weeding)',
@@ -139,8 +139,8 @@ export const INITIAL_ACTIONS = [
 
 export const INITIAL_ACTIVITIES = [
   {
-    id: 'hist-1',
-    plot_id: 'plot-1',
+    id: 'bbbb1111-1111-1111-1111-111111111111',
+    plot_id: '11111111-1111-1111-1111-111111111111',
     plot_name: 'Plot A - Lahan Utama',
     komoditas_icon: 'tomato',
     activity_type: 'Watering',
@@ -150,8 +150,8 @@ export const INITIAL_ACTIVITIES = [
     timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(),
   },
   {
-    id: 'hist-2',
-    plot_id: 'plot-2',
+    id: 'bbbb2222-2222-2222-2222-222222222222',
+    plot_id: '22222222-2222-2222-2222-222222222222',
     plot_name: 'Plot B - Lereng Selatan',
     komoditas_icon: 'chili',
     activity_type: 'Fertilizing',
@@ -161,8 +161,8 @@ export const INITIAL_ACTIVITIES = [
     timestamp: new Date(Date.now() - 1000 * 60 * 60 * 48).toISOString(),
   },
   {
-    id: 'hist-3',
-    plot_id: 'plot-3',
+    id: 'bbbb3333-3333-3333-3333-333333333333',
+    plot_id: '33333333-3333-3333-3333-333333333333',
     plot_name: 'Plot C - Lembah Sejuk',
     komoditas_icon: 'rice',
     activity_type: 'Pest Inspection',

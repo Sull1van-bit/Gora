@@ -1,5 +1,7 @@
 import React, { useState, useRef } from 'react';
 import PlotCardMini from '../components/home/PlotCardMini';
+import AIRecommendationCard from '../components/home/AIRecommendationCard';
+import useAIRecommendations from '../hooks/useAIRecommendations';
 import { RiMapPinLine, RiAddLine, RiWaterFlashLine, RiDropLine, RiCheckboxCircleLine } from 'react-icons/ri';
 import UniversalIcon from '../utils/iconHelper';
 import useProfile from '../hooks/useProfile';
@@ -11,6 +13,7 @@ export default function HomePage({
   komoditasList,
   newsList,
   onCompleteAction,
+  onAddActions,
   onSelectPlot,
   onNavigateTab,
   onOpenAddPlot,
@@ -27,6 +30,8 @@ export default function HomePage({
   const [isDragging, setIsDragging] = useState(false);
   const [activePlotIndex, setActivePlotIndex] = useState(0);
   const { profile, loading: profileLoading } = useProfile();
+
+  const aiState = useAIRecommendations(weather, plots, actions, onAddActions);
 
   const displayName = profile?.full_name || profile?.username || 'Pengguna';
 
@@ -203,6 +208,15 @@ export default function HomePage({
           </div>
         </div>
       </section>
+
+      {/* SECTION B2: AI Recommendations */}
+      <AIRecommendationCard
+        loading={aiState.loading}
+        recommendation={aiState.recommendation}
+        error={aiState.error}
+        onGetRecommendations={aiState.getRecommendations}
+        onApplyTasks={aiState.applySuggestedTasks}
+      />
 
       {/* SECTION C: Lahan Saya (Plots Horizontal Slider with Dots) */}
       <section className="px-4 mt-4">

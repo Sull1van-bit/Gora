@@ -1,260 +1,179 @@
 import React, { useState } from 'react';
 import { supabase } from '../lib/supabaseClient';
-import { RiPlantFill, RiAlertFill, RiCheckFill, RiEyeOffFill, RiEyeFill, RiLoader4Line } from 'react-icons/ri';
+import { RiEyeCloseLine, RiEyeLine, RiArrowLeftSLine } from 'react-icons/ri';
+import { FaGoogle, FaFacebookF, FaApple } from 'react-icons/fa';
 
-function translateError(msg = '') {
-  if (msg.includes('Invalid login credentials'))
-    return 'Email atau password salah. Periksa kembali.';
-  if (msg.includes('Email not confirmed'))
-    return 'Email belum dikonfirmasi. Cek inbox/spam lalu klik link konfirmasi.';
-  if (msg.includes('User already registered'))
-    return 'Email sudah terdaftar. Silakan login.';
-  if (msg.includes('Password should be at least'))
-    return 'Password minimal 6 karakter.';
-  if (msg.includes('rate limit'))
-    return 'Terlalu banyak percobaan. Tunggu beberapa menit.';
-  if (msg.includes('email address is invalid') || msg.includes('email_address_invalid'))
-    return 'Format email tidak valid (gunakan email asli, misal: nama@gmail.com).';
-  if (msg.includes('network') || msg.includes('fetch'))
-    return 'Tidak dapat terhubung ke server. Periksa koneksi internet.';
-  return msg;
-}
-
-export default function LoginPage({ onLoginSuccess }) {
-  const [mode, setMode] = useState('login');
+export default function LoginPage({ onLoginSuccess, onNavigateRegister, onBack }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [showPass, setShowPass] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState('');
-  const [error, setError] = useState('');
+  const [errorMsg, setErrorMsg] = useState('');
 
-  const reset = () => { setError(''); setMessage(''); };
-
-  const handleSubmit = async (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
     setLoading(true);
-    reset();
+    setErrorMsg('');
 
     try {
-      if (mode === 'login') {
-        const { data, error: authError } = await supabase.auth.signInWithPassword({ email, password });
-        if (authError) throw authError;
-        if (data.session) onLoginSuccess(data.session);
+      if (!supabase) {
+        throw new Error("Koneksi Supabase belum siap.");
+      }
+      
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
 
-      } else if (mode === 'signup') {
-        const { error: authError } = await supabase.auth.signUp({ email, password });
-        if (authError) throw authError;
-        setMessage('Akun berhasil dibuat! Cek inbox email untuk konfirmasi, lalu login.');
-        setMode('login');
+      if (error) {
+        throw error;
+      }
 
-      } else if (mode === 'reset') {
-        const { error: authError } = await supabase.auth.resetPasswordForEmail(email, {
-          redirectTo: window.location.origin,
-        });
-        if (authError) throw authError;
-        setMessage('Link reset password telah dikirim ke email kamu.');
-        setMode('login');
+      if (onLoginSuccess && data.session) {
+        onLoginSuccess(data.session);
       }
     } catch (err) {
-      setError(translateError(err.message));
+      setErrorMsg(err.message || "Gagal masuk. Periksa kembali kredensial Anda.");
     } finally {
       setLoading(false);
     }
   };
 
-  const titles = { login: 'Masuk ke GORA', signup: 'Buat Akun Baru', reset: 'Reset Password' };
-  const btnLabels = { login: 'Masuk', signup: 'Daftar', reset: 'Kirim Link Reset' };
+  const handleOAuthLogin = async (provider) => {
+    try {
+      if (!supabase) throw new Error("Koneksi Supabase belum siap.");
+      
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: provider,
+      });
+      if (error) throw error;
+      
+    } catch (err) {
+      setErrorMsg(err.message || `Gagal masuk dengan ${provider}.`);
+    }
+  };
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      background: 'linear-gradient(135deg, #0f172a 0%, #064e3b 100%)',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      padding: '20px',
-      fontFamily: "'Inter', 'Segoe UI', sans-serif",
-    }}>
-      <div style={{
-        background: 'white',
-        borderRadius: 20,
-        padding: '32px 28px',
-        width: '100%',
-        maxWidth: 380,
-        boxShadow: '0 25px 50px rgba(0,0,0,0.4)',
-      }}>
-        
-        <div style={{ textAlign: 'center', marginBottom: 24 }}>
-          <div style={{
-            width: 56, height: 56, borderRadius: 16,
-            background: 'linear-gradient(135deg, #10b981, #059669)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: 28, margin: '0 auto 12px',
-            boxShadow: '0 4px 12px rgba(16,185,129,0.3)',
-            color: 'white',
-          }}>
-            <RiPlantFill />
-          </div>
-          <h1 style={{ margin: 0, fontSize: 22, fontWeight: 900, color: '#0f172a', letterSpacing: -0.5 }}>GORA</h1>
-          <p style={{ margin: '4px 0 0', fontSize: 12, color: '#94a3b8' }}>Solusi Pintar Pertanian Nusantara</p>
+    <div className="min-h-screen bg-white sm:bg-slate-50 flex items-center justify-center sm:py-6">
+      <div className="w-full max-w-md bg-[#f5f9ed] font-['Montserrat_Alternates',sans-serif] relative overflow-hidden flex flex-col sm:rounded-[30px] sm:shadow-2xl sm:h-[800px] min-h-screen sm:min-h-0">
+        {/* Decorative top dark element from design (subtle shadow overlay) */}
+        <div className="absolute top-0 left-0 w-full h-[200px] bg-gradient-to-b from-[#e5edd7] to-transparent pointer-events-none" />
+
+      {/* Header */}
+      <div className="pt-14 px-6 relative z-10">
+        <button onClick={onBack} className="text-[#3a6c3d] text-3xl mb-6 active:scale-95 transition-transform">
+          <RiArrowLeftSLine />
+        </button>
+        <div className="text-center px-4">
+          <h1 className="text-[#3a6c3d] text-2xl font-bold leading-tight">
+            Masuk ke Akunmu
+          </h1>
+          <p className="text-[#3c3b3b] text-[13px] font-medium mt-2">
+            Yuk, lanjutkan perjalanan bertanimu
+          </p>
         </div>
+      </div>
 
-        <h2 style={{ margin: '0 0 20px', fontSize: 16, fontWeight: 700, color: '#1e293b' }}>
-          {titles[mode]}
-        </h2>
-
-        
-        {error && (
-          <div style={{
-            background: '#fef2f2', border: '1px solid #fecaca',
-            borderRadius: 10, padding: '10px 14px',
-            color: '#b91c1c', fontSize: 13, marginBottom: 14,
-            display: 'flex', alignItems: 'flex-start', gap: 8,
-          }}>
-            <RiAlertFill style={{ fontSize: 16, marginTop: 2, flexShrink: 0 }} />
-            <span>{error}</span>
-          </div>
-        )}
-
-        
-        {message && (
-          <div style={{
-            background: '#f0fdf4', border: '1px solid #bbf7d0',
-            borderRadius: 10, padding: '10px 14px',
-            color: '#166534', fontSize: 13, marginBottom: 14,
-            display: 'flex', alignItems: 'flex-start', gap: 8,
-          }}>
-            <RiCheckFill style={{ fontSize: 16, marginTop: 2, flexShrink: 0 }} />
-            <span>{message}</span>
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit}>
+      {/* Main Card */}
+      <div className="mt-8 mx-5 bg-[#fbf9f3] rounded-[20px] shadow-[0px_2px_8px_rgba(0,0,0,0.06)] px-6 py-8 relative z-10 flex-1 mb-10">
+        <form onSubmit={handleLogin} className="space-y-6">
+          {errorMsg && (
+            <div className="p-3 bg-red-100 text-red-700 text-sm rounded-xl text-center font-semibold">
+              {errorMsg}
+            </div>
+          )}
           
-          <div style={{ marginBottom: 14 }}>
-            <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#374151', marginBottom: 6 }}>
-              Email
+          {/* Email Field */}
+          <div className="flex flex-col gap-2">
+            <label className="text-[#3c3b3b] text-base font-semibold pl-1">
+              Email atau Nomor HP
             </label>
             <input
-              type="email"
+              type="text"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              placeholder="Contoh: gora@gmail.com"
+              className="w-full h-12 border border-[#8f8e94] rounded-[15px] px-4 text-sm font-medium text-[#3c3b3b] placeholder:text-[#8f8e94] focus:outline-none focus:border-[#3a6c3d] focus:ring-1 focus:ring-[#3a6c3d] bg-transparent transition-all"
               required
-              placeholder="nama@gmail.com"
-              autoComplete="email"
-              style={{
-                width: '100%', boxSizing: 'border-box',
-                padding: '10px 14px', fontSize: 14,
-                border: '1.5px solid #e2e8f0', borderRadius: 10,
-                outline: 'none', transition: 'border-color 0.2s',
-                color: '#1e293b', background: '#f8fafc',
-              }}
-              onFocus={e => e.target.style.borderColor = '#10b981'}
-              onBlur={e => e.target.style.borderColor = '#e2e8f0'}
             />
           </div>
 
-          
-          {mode !== 'reset' && (
-            <div style={{ marginBottom: 18 }}>
-              <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#374151', marginBottom: 6 }}>
-                Password
-              </label>
-              <div style={{ position: 'relative' }}>
-                <input
-                  type={showPass ? 'text' : 'password'}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  minLength={6}
-                  placeholder="Minimal 6 karakter"
-                  autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
-                  style={{
-                    width: '100%', boxSizing: 'border-box',
-                    padding: '10px 40px 10px 14px', fontSize: 14,
-                    border: '1.5px solid #e2e8f0', borderRadius: 10,
-                    outline: 'none', color: '#1e293b', background: '#f8fafc',
-                  }}
-                  onFocus={e => e.target.style.borderColor = '#10b981'}
-                  onBlur={e => e.target.style.borderColor = '#e2e8f0'}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPass(!showPass)}
-                  style={{
-                    position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)',
-                    background: 'none', border: 'none', cursor: 'pointer', fontSize: 18, padding: 0, color: '#94a3b8', display: 'flex', alignItems: 'center'
-                  }}
-                >
-                  {showPass ? <RiEyeOffFill /> : <RiEyeFill />}
-                </button>
-              </div>
-
-              
-              {mode === 'login' && (
-                <div style={{ textAlign: 'right', marginTop: 6 }}>
-                  <button
-                    type="button"
-                    onClick={() => { setMode('reset'); reset(); }}
-                    style={{ background: 'none', border: 'none', color: '#10b981', fontSize: 12, cursor: 'pointer', fontWeight: 600 }}
-                  >
-                    Lupa password?
-                  </button>
-                </div>
-              )}
+          {/* Password Field */}
+          <div className="flex flex-col gap-2">
+            <label className="text-[#3c3b3b] text-base font-semibold pl-1">
+              Kata Sandi
+            </label>
+            <div className="relative">
+              <input
+                type={showPassword ? 'text' : 'password'}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="******"
+                className="w-full h-12 border border-[#8f8e94] rounded-[15px] px-4 text-lg tracking-widest text-[#3c3b3b] placeholder:text-[#8f8e94] focus:outline-none focus:border-[#3a6c3d] focus:ring-1 focus:ring-[#3a6c3d] bg-transparent transition-all"
+                required
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-[#8f8e94] text-xl"
+              >
+                {showPassword ? <RiEyeLine /> : <RiEyeCloseLine />}
+              </button>
             </div>
-          )}
+            <div className="text-right mt-1">
+              <button type="button" className="text-[#3a6c3d] text-xs font-semibold hover:underline">
+                lupa kata sandi?
+              </button>
+            </div>
+          </div>
 
-          
+          {/* Login Button */}
           <button
             type="submit"
             disabled={loading}
-            style={{
-              width: '100%', padding: '12px',
-              background: loading ? '#94a3b8' : 'linear-gradient(135deg, #10b981, #059669)',
-              color: '#fff', border: 'none', borderRadius: 10,
-              fontWeight: 700, fontSize: 15, cursor: loading ? 'not-allowed' : 'pointer',
-              boxShadow: loading ? 'none' : '0 4px 12px rgba(16,185,129,0.3)',
-              transition: 'all 0.2s',
-            }}
+            className="w-full h-12 mt-4 bg-gradient-to-b from-[#578a3e] to-[#20480c] rounded-[15px] text-white text-base font-semibold flex items-center justify-center shadow-md active:scale-[0.98] transition-transform disabled:opacity-70"
           >
-            {loading ? <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}><RiLoader4Line className="animate-spin" /> Memproses...</span> : btnLabels[mode]}
+            {loading ? 'Memproses...' : 'Masuk'}
           </button>
         </form>
 
-        
-        <div style={{ textAlign: 'center', marginTop: 20, fontSize: 13, color: '#64748b' }}>
-          {mode === 'login' && (
-            <>
-              Belum punya akun?{' '}
-              <button
-                onClick={() => { setMode('signup'); reset(); }}
-                style={{ background: 'none', border: 'none', color: '#10b981', fontWeight: 700, cursor: 'pointer', fontSize: 13 }}
-              >
-                Daftar sekarang
-              </button>
-            </>
-          )}
-          {mode === 'signup' && (
-            <>
-              Sudah punya akun?{' '}
-              <button
-                onClick={() => { setMode('login'); reset(); }}
-                style={{ background: 'none', border: 'none', color: '#10b981', fontWeight: 700, cursor: 'pointer', fontSize: 13 }}
-              >
-                Masuk
-              </button>
-            </>
-          )}
-          {mode === 'reset' && (
-            <button
-              onClick={() => { setMode('login'); reset(); }}
-              style={{ background: 'none', border: 'none', color: '#10b981', fontWeight: 700, cursor: 'pointer', fontSize: 13 }}
-            >
-              ← Kembali ke login
-            </button>
-          )}
+        {/* Divider */}
+        <div className="flex items-center gap-3 mt-10 w-full px-2">
+          <div className="h-[1px] bg-[#8f8e94]/30 flex-1"></div>
+          <span className="text-[#3a6c3d] font-semibold text-sm shrink-0">atau masuk dengan</span>
+          <div className="h-[1px] bg-[#8f8e94]/30 flex-1"></div>
+        </div>
+
+        {/* Social Logins */}
+        <div className="flex items-center justify-center gap-6 mt-6">
+          <button 
+            type="button" 
+            onClick={() => handleOAuthLogin('google')}
+            className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-sm border border-slate-100 text-gray-700 text-xl hover:bg-slate-50 transition-colors"
+          >
+            <FaGoogle />
+          </button>
+          <button 
+            type="button" 
+            onClick={() => handleOAuthLogin('facebook')}
+            className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-sm border border-slate-100 text-[#1877F2] text-xl hover:bg-slate-50 transition-colors"
+          >
+            <FaFacebookF />
+          </button>
+          <button 
+            type="button" 
+            onClick={() => handleOAuthLogin('apple')}
+            className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-sm border border-slate-100 text-black text-2xl hover:bg-slate-50 transition-colors pb-1"
+          >
+            <FaApple />
+          </button>
+        </div>
+      </div>
+
+        {/* Footer */}
+        <div className="pb-8 text-center text-sm font-semibold">
+          <span className="text-[#3c3b3b]">Belum punya akun? </span>
+          <button type="button" onClick={onNavigateRegister} className="text-[#3a6c3d] hover:underline">Daftar Sekarang</button>
         </div>
       </div>
     </div>

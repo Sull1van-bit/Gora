@@ -37,25 +37,12 @@ export default function PlotCardFull({ plot, onSelect }) {
   let progressVal = plot.growth_progress || plot.progress || 15;
   let daysToHarvest = plot.days_to_harvest || 28;
 
+  let elapsedDays = 0;
   if (plot.planting_date && plot.estimated_harvest_date) {
     const start = new Date(plot.planting_date).getTime();
-    const end = new Date(plot.estimated_harvest_date).getTime();
     const now = new Date().getTime();
-
-    if (now >= end) {
-      progressVal = 100;
-      daysToHarvest = 0;
-    } else if (now <= start) {
-      progressVal = 0;
-      daysToHarvest = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
-    } else {
-      const totalDays = end - start;
-      const elapsedDays = now - start;
-      progressVal = Math.round((elapsedDays / totalDays) * 100);
-      daysToHarvest = Math.ceil((end - now) / (1000 * 60 * 60 * 24));
-    }
+    elapsedDays = Math.max(0, Math.floor((now - start) / (1000 * 60 * 60 * 24)));
   }
-
   return (
     <div
       onClick={() => onSelect(plot.id)}
@@ -98,7 +85,7 @@ export default function PlotCardFull({ plot, onSelect }) {
             <div className="flex items-center gap-1.5 mt-1.5">
               <img src="/assets/figma/plots/calendar_icon.svg" className="w-[11px] h-[11px] shrink-0" alt="" />
               <p className="font-['Montserrat_Alternates',sans-serif] font-medium text-[#8f8e94] text-[10px]">
-                Panen <span className="font-bold">{daysToHarvest} hari lagi</span>
+                Umur: <span className="font-bold">{elapsedDays} Hari</span>
               </p>
             </div>
           </div>
@@ -117,7 +104,7 @@ export default function PlotCardFull({ plot, onSelect }) {
               {progressVal}%
             </p>
           </div>
-          <div className="w-full bg-[#d9d9d9] h-[6px] rounded-full overflow-hidden">
+          <div className="w-full bg-[#d9d9d9] h-[4px] rounded-full mt-2 overflow-hidden">
             <div 
               className={`${statusStyle.barClass} h-full rounded-full transition-all duration-500`}
               style={{ width: `${progressVal}%` }}
