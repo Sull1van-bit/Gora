@@ -28,15 +28,6 @@ export default function ArticlesView({ newsList, newsLoading, onSelectArticle })
 
   return (
     <div className="space-y-3.5 animate-fade-in">
-      <div className="flex items-center justify-between px-1">
-        <div>
-          <h2 className="text-base font-extrabold text-slate-800 font-['Montserrat_Alternates',sans-serif] flex items-center gap-1.5">
-            <RiNewspaperLine /> Berita & Panduan Tani
-          </h2>
-          <p className="text-xs text-slate-500">Tips agronomi & perkembangan pasar pertanian</p>
-        </div>
-      </div>
-
       <div className="space-y-3">
         {newsLoading ? renderSkeletons() : newsList?.length > 0 ? newsList.map((article) => (
           <div
