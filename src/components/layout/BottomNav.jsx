@@ -70,7 +70,7 @@ export default function BottomNav({ activeTab, onTabChange, onOpenAddPlot, urgen
               aria-label="Tambah Tanaman"
               style={{ WebkitTapHighlightColor: 'transparent' }}
             >
-              <RiAddLine className="w-7 h-7 font-bold group-hover:rotate-90 transition-transform duration-300" />
+              <RiAddLine className="w-7 h-7 font-bold transition-transform duration-300" />
             </button>
           </div>
         </div>

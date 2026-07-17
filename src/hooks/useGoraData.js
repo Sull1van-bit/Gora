@@ -22,49 +22,84 @@ async function fireIncrementStreak() {
 }
 
 export default function useGoraData() {
-  const [plots, setPlots] = useState(() => {
-    const saved = localStorage.getItem('gora_plots');
-    return saved ? JSON.parse(saved) : INITIAL_PLOTS;
-  });
+  const [plots, setPlots] = useState([]);
 
   const [actions, setActions] = useState(() => {
     const saved = localStorage.getItem('gora_actions');
     return saved ? JSON.parse(saved) : INITIAL_ACTIONS;
   });
 
-  const [activities, setActivities] = useState(() => {
-    const saved = localStorage.getItem('gora_activities');
-    return saved ? JSON.parse(saved) : INITIAL_ACTIVITIES;
-  });
+  const [activities, setActivities] = useState([]);
 
-  const [komoditasList] = useState(INITIAL_KOMODITAS);
+  const [komoditasList, setKomoditasList] = useState(INITIAL_KOMODITAS);
   const [newsList] = useState(INITIAL_NEWS);
   const [weather] = useState(WEATHER_PREVIEW);
 
-  useEffect(() => {
-    localStorage.setItem('gora_plots', JSON.stringify(plots));
-  }, [plots]);
+
 
   useEffect(() => {
     localStorage.setItem('gora_actions', JSON.stringify(actions));
   }, [actions]);
 
-  useEffect(() => {
-    localStorage.setItem('gora_activities', JSON.stringify(activities));
-  }, [activities]);
+
 
   useEffect(() => {
     async function fetchSupabasePlots() {
       if (!supabase) return;
       try {
         const { data, error } = await supabase.from('plots').select('*');
-        if (!error && data && data.length > 0) {
+        if (!error && data) {
+          setPlots(data);
         }
       } catch (err) {
         console.warn('[useGoraData] Supabase sync fallback to local store:', err);
       }
     }
     fetchSupabasePlots();
+  }, []);
+
+  useEffect(() => {
+    async function fetchActivities() {
+      if (!supabase) return;
+      try {
+        const { data, error } = await supabase
+          .from('plot_activities')
+          .select('*, plots!inner(plot_name, komoditas_id)')
+          .order('created_at', { ascending: false });
+          
+        if (!error && data) {
+          // Map DB structure to frontend structure
+          const mapped = data.map(d => ({
+            id: d.id,
+            plot_id: d.plot_id,
+            plot_name: d.plots?.plot_name,
+            activity_type: d.activity_type,
+            title: `Aktivitas ${d.activity_type}`,
+            notes: d.description || '-',
+            date: new Date(d.created_at).toLocaleDateString('id-ID', {day:'numeric', month:'short', hour:'2-digit', minute:'2-digit'}) + ' WIB',
+            timestamp: d.created_at
+          }));
+          setActivities(mapped);
+        }
+      } catch(err) {
+        console.warn('Error fetching activities:', err);
+      }
+    }
+    fetchActivities();
+  }, []);
+
+  useEffect(() => {
+    async function fetchSupabaseCrops() {
+      if (!supabase) return;
+      try {
+        const { data, error } = await supabase.from('komoditas').select('*');
+        if (!error && data && data.length > 0) {
+          setKomoditasList(data);
+        }
+      } catch (err) {
+      }
+    }
+    fetchSupabaseCrops();
   }, []);
 
   const completeAction = useCallback((actionId) => {
@@ -125,75 +160,116 @@ export default function useGoraData() {
     }));
   }, [actions]);
 
-  const addPlot = useCallback((newPlotData) => {
+  const addPlot = useCallback(async (newPlotData) => {
     const kom = komoditasList.find(k => k.id === newPlotData.komoditas_id) || komoditasList[0];
-    const newPlot = {
-      id: `plot-${Date.now()}`,
+    
+    if (!supabase) return;
+    
+    const { data: { session } } = await supabase.auth.getSession();
+    const userId = session?.user?.id;
+
+    const dbPlot = {
       plot_name: newPlotData.plot_name || 'Plot Baru',
-      komoditas_id: kom.id,
-      komoditas_nama: kom.nama,
-      komoditas_icon: kom.icon,
+      komoditas_id: kom?.id,
       area: Number(newPlotData.area) || 500,
+      area_unit: newPlotData.unit || 'm²',
       location: newPlotData.location || 'Lokasi Terdeteksi',
       planting_date: newPlotData.planting_date || new Date().toISOString().split('T')[0],
       estimated_harvest_date: newPlotData.estimated_harvest_date || '2026-10-01',
       current_growth_stage: newPlotData.current_growth_stage || 'Seedling (Pembibitan)',
-      growth_progress: 15,
-      status: 'ontrack',
-      status_text: 'Plot baru dibuat, masa pembibitan berjalan',
-      priority_score: 30,
-      last_watered: 'Hari ini',
-      last_fertilized: 'Belum dilakukan',
       updated_at: new Date().toISOString(),
+      owner_id: userId,
     };
 
-    setPlots(prev => [newPlot, ...prev]);
-    return newPlot;
+    const { data, error } = await supabase.from('plots').insert(dbPlot).select().single();
+
+    if (!error && data) {
+      // Merge UI properties for local state
+      const enrichedPlot = {
+        ...data,
+        komoditas_nama: kom?.nama,
+        komoditas_icon: kom?.icon,
+        status: 'ontrack',
+        status_text: 'Plot baru dibuat',
+        priority_score: 30,
+        last_watered: 'Hari ini',
+        last_fertilized: 'Belum dilakukan',
+      };
+      setPlots(prev => [enrichedPlot, ...prev]);
+      return enrichedPlot;
+    } else {
+      console.error('Error inserting plot:', error);
+      const tempPlot = {
+        ...dbPlot,
+        id: `temp-${Date.now()}`,
+        komoditas_nama: kom?.nama,
+        komoditas_icon: kom?.icon,
+        status: 'ontrack',
+        status_text: 'Gagal sinkron, mode lokal',
+        priority_score: 30,
+        last_watered: 'Hari ini',
+        last_fertilized: 'Belum dilakukan',
+      };
+      setPlots(prev => [tempPlot, ...prev]);
+      return tempPlot;
+    }
   }, [komoditasList]);
 
-  const logActivity = useCallback((activityData) => {
+  const logActivity = useCallback(async (activityData) => {
     const targetPlot = plots.find(p => p.id === activityData.plot_id);
     if (!targetPlot) return;
-
-    const now = new Date();
-    const timeStr = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
     
-    const newActivity = {
-      id: `hist-${Date.now()}`,
+    if (!supabase) return;
+    
+    const { data: { session } } = await supabase.auth.getSession();
+    const userId = session?.user?.id;
+
+    const dbActivity = {
       plot_id: targetPlot.id,
-      plot_name: targetPlot.plot_name,
-      komoditas_icon: targetPlot.komoditas_icon,
       activity_type: activityData.activity_type,
-      title: activityData.title || `Aktivitas ${activityData.activity_type}`,
-      notes: activityData.notes || '-',
-      date: `Hari ini, ${timeStr} WIB`,
-      timestamp: now.toISOString(),
+      description: activityData.notes || '',
+      created_by: userId
     };
 
-    setActivities(prev => [newActivity, ...prev]);
-    fireIncrementStreak();
+    const { data, error } = await supabase.from('plot_activities').insert(dbActivity).select().single();
 
-    setActions(prev => prev.map(a => {
-      if (a.plot_id === targetPlot.id && a.activity_type === activityData.activity_type && a.status !== 'completed') {
-        return { ...a, status: 'completed' };
-      }
-      return a;
-    }));
+    if (!error && data) {
+      const newActivity = {
+        id: data.id,
+        plot_id: targetPlot.id,
+        plot_name: targetPlot.plot_name,
+        activity_type: data.activity_type,
+        title: activityData.title || `Aktivitas ${data.activity_type}`,
+        notes: data.description || '-',
+        date: new Date(data.created_at).toLocaleDateString('id-ID', {day:'numeric', month:'short', hour:'2-digit', minute:'2-digit'}) + ' WIB',
+        timestamp: data.created_at,
+      };
 
-    setPlots(prev => prev.map(p => {
-      if (p.id === targetPlot.id) {
-        return {
-          ...p,
-          last_watered: activityData.activity_type === 'Watering' ? 'Baru saja (Hari ini)' : p.last_watered,
-          last_fertilized: activityData.activity_type === 'Fertilizing' ? 'Baru saja (Hari ini)' : p.last_fertilized,
-          status: 'ontrack',
-          status_text: `${activityData.activity_type} selesai tercatat`,
-          priority_score: Math.max(10, p.priority_score - 30),
-          updated_at: now.toISOString(),
-        };
-      }
-      return p;
-    }));
+      setActivities(prev => [newActivity, ...prev]);
+      fireIncrementStreak();
+
+      setActions(prev => prev.map(a => {
+        if (a.plot_id === targetPlot.id && a.activity_type === activityData.activity_type && a.status !== 'completed') {
+          return { ...a, status: 'completed' };
+        }
+        return a;
+      }));
+
+      setPlots(prev => prev.map(p => {
+        if (p.id === targetPlot.id) {
+          return {
+            ...p,
+            last_watered: activityData.activity_type === 'Watering' ? 'Baru saja (Hari ini)' : p.last_watered,
+            last_fertilized: activityData.activity_type === 'Fertilizing' ? 'Baru saja (Hari ini)' : p.last_fertilized,
+            status: 'ontrack',
+            status_text: `${activityData.activity_type} selesai tercatat`,
+            priority_score: Math.max(10, p.priority_score - 30),
+            updated_at: new Date().toISOString(),
+          };
+        }
+        return p;
+      }));
+    }
   }, [plots]);
 
   const reportIssue = useCallback((issueData) => {

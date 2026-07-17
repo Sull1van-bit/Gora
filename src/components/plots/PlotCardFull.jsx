@@ -1,6 +1,4 @@
 import React from 'react';
-import { RiLeafFill, RiPlantFill, RiSeedlingFill } from 'react-icons/ri';
-
 export default function PlotCardFull({ plot, onSelect }) {
   const getStatusBadge = (status) => {
     switch (status) {
@@ -24,7 +22,28 @@ export default function PlotCardFull({ plot, onSelect }) {
   };
 
   const statusBadge = getStatusBadge(plot.status);
-  const progressVal = plot.growth_progress || 67;
+  
+  let progressVal = plot.growth_progress || 0;
+  let daysToHarvest = plot.days_to_harvest || 0;
+
+  if (plot.planting_date && plot.estimated_harvest_date) {
+    const start = new Date(plot.planting_date).getTime();
+    const end = new Date(plot.estimated_harvest_date).getTime();
+    const now = new Date().getTime();
+
+    if (now >= end) {
+      progressVal = 100;
+      daysToHarvest = 0;
+    } else if (now <= start) {
+      progressVal = 0;
+      daysToHarvest = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
+    } else {
+      const totalDays = end - start;
+      const elapsedDays = now - start;
+      progressVal = Math.round((elapsedDays / totalDays) * 100);
+      daysToHarvest = Math.ceil((end - now) / (1000 * 60 * 60 * 24));
+    }
+  }
 
   return (
     <div
@@ -42,11 +61,14 @@ export default function PlotCardFull({ plot, onSelect }) {
 
       
       <div className="size-[55px] bg-[#fbf9f3] rounded-full absolute top-[70px] sm:top-[82px] left-[10px] shadow-[0px_2px_4px_rgba(0,0,0,0.1)] flex items-center justify-center z-10 border-2 border-[#fbf9f3] text-emerald-600">
-        <span className="text-[28px] leading-none select-none flex items-center justify-center">
-          {plot.komoditas_nama?.includes('Tomat') ? <RiPlantFill /> :
-           plot.komoditas_nama?.includes('Cabai') ? <RiLeafFill /> :
-           plot.komoditas_nama?.includes('Padi') ? <RiSeedlingFill /> :
-           <RiLeafFill />}
+        <span className="text-[30px] leading-none select-none flex items-center justify-center text-black">
+          {plot.komoditas_nama?.includes('Tomat') ? '🍅' :
+           plot.komoditas_nama?.includes('Cabai') ? '🌶️' :
+           plot.komoditas_nama?.includes('Padi') ? '🌾' :
+           plot.komoditas_nama?.includes('Jagung') ? '🌽' :
+           plot.komoditas_nama?.includes('Bawang') ? '🧅' :
+           plot.komoditas_nama?.includes('Kubis') ? '🥬' :
+           '🌱'}
         </span>
       </div>
 
@@ -69,7 +91,7 @@ export default function PlotCardFull({ plot, onSelect }) {
             <div className="flex items-center gap-1.5 mt-1.5">
               <img src="/assets/figma/plots/calendar_icon.svg" className="w-[11px] h-[11px] shrink-0" alt="" />
               <p className="font-['Montserrat_Alternates',sans-serif] font-medium text-[#8f8e94] text-[10px]">
-                Panen <span className="font-bold">{plot.days_to_harvest || 28} hari lagi</span>
+                Panen <span className="font-bold">{daysToHarvest} hari lagi</span>
               </p>
             </div>
           </div>
