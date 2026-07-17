@@ -1,11 +1,14 @@
 import { useState, useEffect, useCallback } from 'react';
 
+/**
+ * @returns {{ latitude: number|null, longitude: number|null, lat: number|null, lon: number|null, provinsi: string|null, kecamatan: string|null, kota: string|null, loading: boolean, error: string|null, refetch: () => void }}
+ */
 export default function useUserLocation() {
+  const [lat, setLat] = useState(null);
+  const [lon, setLon] = useState(null);
   const [provinsi, setProvinsi] = useState(null);
   const [kecamatan, setKecamatan] = useState(null);
   const [kota, setKota] = useState(null);
-  const [lat, setLat] = useState(null);
-  const [lon, setLon] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -74,5 +77,16 @@ export default function useUserLocation() {
     fetchLocation();
   }, [fetchLocation]);
 
-  return { provinsi, kecamatan, kota, lat, lon, loading, error, refetch: fetchLocation };
+  return {
+    latitude: lat,
+    longitude: lon,
+    lat,
+    lon,
+    provinsi,
+    kecamatan,
+    kota,
+    loading,
+    error,
+    refetch: fetchLocation,
+  };
 }
