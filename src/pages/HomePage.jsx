@@ -227,9 +227,8 @@ export default function HomePage({
           onMouseUp={handleMouseUpOrLeave}
           onMouseLeave={handleMouseUpOrLeave}
           style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-          className={`flex gap-3 overflow-x-auto pb-2 scrollbar-none snap-x snap-mandatory [&::-webkit-scrollbar]:hidden select-none ${
-            isDragging ? 'cursor-grabbing !snap-none' : 'cursor-grab'
-          }`}
+          className={`flex gap-3 overflow-x-auto pb-2 scrollbar-none snap-x snap-mandatory [&::-webkit-scrollbar]:hidden select-none ${isDragging ? 'cursor-grabbing !snap-none' : 'cursor-grab'
+            }`}
         >
           {plotsToShow.map((plot) => (
             <div key={plot.id} className="snap-start shrink-0">
@@ -261,8 +260,8 @@ export default function HomePage({
                 key={idx}
                 onClick={() => scrollToPlot(idx)}
                 className={`h-1.5 rounded-full transition-all duration-300 ${activePlotIndex === idx
-                    ? 'w-5 bg-[#28502d]'
-                    : 'w-1.5 bg-slate-300 hover:bg-slate-400'
+                  ? 'w-5 bg-[#28502d]'
+                  : 'w-1.5 bg-slate-300 hover:bg-slate-400'
                   }`}
                 aria-label={`Plot ${idx + 1}`}
               />

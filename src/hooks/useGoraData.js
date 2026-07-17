@@ -113,14 +113,50 @@ export default function useGoraData() {
           .select('*')
           .order('created_at', { ascending: false });
 
-        if (!actionsErr && actionsData) {
-          if (actionsData.length > 0) {
-            setActions(actionsData);
-          } else {
-            // Seed initial actions into Supabase if table is empty so UI has daily checklist right away
-            await supabase.from('actions').insert(INITIAL_ACTIONS);
-            setActions(INITIAL_ACTIONS);
+        let finalActions = actionsData || [];
+        if (!actionsErr && actionsData && actionsData.length === 0) {
+          await supabase.from('actions').insert(INITIAL_ACTIONS);
+          finalActions = INITIAL_ACTIONS;
+        }
+
+        // Ensure every plot has daily actions in Supabase actions table
+        if (plotsData && plotsData.length > 0) {
+          const missingActions = [];
+          plotsData.forEach(p => {
+            const hasAct = finalActions.some(a => a.plot_id === p.id);
+            if (!hasAct) {
+              missingActions.push({
+                id: `act-${p.id}-1`,
+                plot_id: p.id,
+                plot_name: p.plot_name,
+                komoditas_icon: p.komoditas?.icon || p.komoditas_icon || '🌱',
+                title: 'Penyiraman & Pengecekan Kelembaban',
+                description: 'Periksa kelembaban tanah dan lakukan penyiraman pagi/sore hari.',
+                status: 'today',
+                due_text: 'Hari ini (Due Today)',
+                priority: 'high',
+                activity_type: 'Watering'
+              }, {
+                id: `act-${p.id}-2`,
+                plot_id: p.id,
+                plot_name: p.plot_name,
+                komoditas_icon: p.komoditas?.icon || p.komoditas_icon || '🌱',
+                title: 'Inspeksi Hama & Daun Tanaman',
+                description: 'Periksa bagian bawah daun terhadap serangan kutu kebul atau gulma musiman.',
+                status: 'today',
+                due_text: 'Hari ini (Due Today)',
+                priority: 'medium',
+                activity_type: 'Pest Inspection'
+              });
+            }
+          });
+          if (missingActions.length > 0) {
+            await supabase.from('actions').insert(missingActions);
+            finalActions = [...finalActions, ...missingActions];
           }
+        }
+        if (finalActions.length > 0) {
+          setActions(finalActions);
         }
 
         // 4. Fetch Activities (from plot_activities)
@@ -157,6 +193,16 @@ export default function useGoraData() {
   const completeAction = useCallback(async (actionId) => {
     const targetAction = actions.find(a => a.id === actionId);
     if (!targetAction) return;
+
+    if (targetAction.status === 'completed') {
+      setActions(prev => prev.map(a => a.id === actionId ? { ...a, status: 'today' } : a));
+      if (supabase) {
+        supabase.from('actions').update({ status: 'today' }).eq('id', actionId).then(({ error }) => {
+          if (error) console.warn('[completeAction] Supabase uncheck update error:', error);
+        });
+      }
+      return;
+    }
 
     const now = new Date();
     const timeStr = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
@@ -282,6 +328,41 @@ export default function useGoraData() {
       owner_id: userId,
     };
 
+    const createAndStorePlotActions = (plotObj) => {
+      const newPlotActions = [
+        {
+          id: `act-${plotObj.id}-1`,
+          plot_id: plotObj.id,
+          plot_name: plotObj.plot_name,
+          komoditas_icon: plotObj.komoditas_icon || '🌱',
+          title: 'Penyiraman & Pengecekan Kelembaban',
+          description: 'Periksa kelembaban tanah dan lakukan penyiraman pagi/sore hari.',
+          status: 'today',
+          due_text: 'Hari ini (Due Today)',
+          priority: 'high',
+          activity_type: 'Watering'
+        },
+        {
+          id: `act-${plotObj.id}-2`,
+          plot_id: plotObj.id,
+          plot_name: plotObj.plot_name,
+          komoditas_icon: plotObj.komoditas_icon || '🌱',
+          title: 'Inspeksi Hama & Daun Tanaman',
+          description: 'Periksa daun dari gejala serangan hama atau gulma musiman.',
+          status: 'today',
+          due_text: 'Hari ini (Due Today)',
+          priority: 'medium',
+          activity_type: 'Pest Inspection'
+        }
+      ];
+      if (supabase) {
+        supabase.from('actions').insert(newPlotActions).then(({ error }) => {
+          if (error) console.warn('[addPlot] Supabase insert actions error:', error);
+        });
+      }
+      setActions(prev => [...newPlotActions, ...prev]);
+    };
+
     if (supabase) {
       const { data, error } = await supabase.from('plots').insert(dbPlot).select('*, komoditas(*)').single();
       if (!error && data) {
@@ -296,6 +377,7 @@ export default function useGoraData() {
           last_fertilized: data.last_fertilized || 'Belum dilakukan',
         };
         setPlots(prev => [enrichedPlot, ...prev]);
+        createAndStorePlotActions(enrichedPlot);
         return enrichedPlot;
       }
     }
@@ -308,6 +390,7 @@ export default function useGoraData() {
       komoditas_icon: kom?.icon || '🌱',
     };
     setPlots(prev => [tempPlot, ...prev]);
+    createAndStorePlotActions(tempPlot);
     return tempPlot;
   }, [komoditasList]);
 

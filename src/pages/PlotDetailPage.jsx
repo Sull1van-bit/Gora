@@ -43,15 +43,8 @@ export default function PlotDetailPage({
   const plotActions = actions.filter((a) => a.plot_id === plot.id);
   const plotActivities = activities.filter((a) => a.plot_id === plot.id);
 
-  const pendingActions = plotActions.filter(a => a.status !== 'completed');
-  const completedActions = plotActions.filter(a => a.status === 'completed');
-
-  const highPriorityActions = pendingActions.length > 0 
-    ? pendingActions.slice(0, 1) 
-    : plotActions.slice(0, 1);
-  const medPriorityActions = pendingActions.length > 1 
-    ? pendingActions.slice(1) 
-    : (completedActions.length > 0 ? completedActions : plotActions.slice(1, 3));
+  const highPriorityActions = plotActions.filter(a => a.priority === 'high' || a.priority === 'urgent');
+  const medPriorityActions = plotActions.filter(a => a.priority !== 'high' && a.priority !== 'urgent');
 
   const progressPct = plot.progress || plot.growth_progress || 67;
   const daysToHarvest = plot.days_to_harvest || 28;
