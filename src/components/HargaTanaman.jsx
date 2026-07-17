@@ -72,40 +72,6 @@ export default function HargaKomoditas() {
 
   return (
     <div className="space-y-3 animate-fade-in">
-      
-      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between pb-1">
-        <div>
-          <h2 className="text-base font-extrabold text-slate-800 font-['Montserrat_Alternates',sans-serif] flex items-center gap-1.5">
-            <RiLineChartLine /> Harga Komoditas Pasar
-          </h2>
-          {lokasiLabel ? (
-            <p className="text-xs text-emerald-700 font-semibold mt-0.5 flex items-center gap-1">
-              <RiMapPin2Fill /> Pasar terdekat: {lokasiLabel}
-            </p>
-          ) : locError ? (
-            <p className="text-xs text-amber-600 mt-0.5 flex items-center gap-1">
-              <RiGlobalLine /> Lokasi tidak terdeteksi — menampilkan data nasional
-            </p>
-          ) : (
-            <p className="text-xs text-slate-400 mt-0.5">Harga sesuai pasar terdekat Anda</p>
-          )}
-        </div>
-        <div className="flex items-center gap-2 mt-2 sm:mt-0 shrink-0">
-          {waktuUpdate && (
-            <span className="text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200 flex items-center gap-1">
-              <RiTimeLine /> {waktuUpdate}
-            </span>
-          )}
-          <button
-            onClick={refetch}
-            className="text-[11px] font-semibold text-slate-500 bg-slate-100 hover:bg-slate-200 px-3 py-1 rounded-full border border-slate-200 transition-all active:scale-95 flex items-center gap-1"
-          >
-            <RiRefreshLine /> Refresh
-          </button>
-        </div>
-      </div>
-
-      
       <div className="relative">
         <input
           type="text"

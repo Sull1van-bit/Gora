@@ -20,11 +20,7 @@ export default function PlotDetailHistory({ plotActivities, setIsReportOpen }) {
       </div>
 
       <div className="space-y-3 pl-1">
-        {(plotActivities.length > 0 ? plotActivities : [
-          { id: 'h1', title: 'Disiram', timeAgo: '1 hari lalu', date: '18/07/2026' },
-          { id: 'h2', title: 'Disiram', timeAgo: '1 hari lalu', date: '18/07/2026' },
-          { id: 'h3', title: 'Disiram', timeAgo: '1 hari lalu', date: '18/07/2026' }
-        ]).map((item, idx) => (
+        {plotActivities.length > 0 ? plotActivities.map((item, idx) => (
           <div 
             key={item.id || idx} 
             className="flex items-start justify-between pb-3 border-b border-[#3c3b3b]/20 last:border-0 text-[#3c3b3b]"
@@ -32,14 +28,18 @@ export default function PlotDetailHistory({ plotActivities, setIsReportOpen }) {
             <div className="flex flex-col gap-0.5">
               <span className="font-['Montserrat_Alternates',sans-serif] font-semibold text-[12px]">{item.title}</span>
               <span className="font-['Montserrat_Alternates',sans-serif] font-medium text-[10px] text-[#6f6e72]">
-                {item.timeAgo || (item.timestamp ? item.timestamp : '1 hari lalu')}
+                {item.notes}
               </span>
             </div>
-            <span className="font-['Montserrat_Alternates',sans-serif] font-semibold text-[12px]">
-              {item.date || '18/07/2026'}
+            <span className="font-['Montserrat_Alternates',sans-serif] font-semibold text-[10px] whitespace-nowrap ml-2">
+              {item.date}
             </span>
           </div>
-        ))}
+        )) : (
+          <div className="text-center py-4 text-[#8f8e94] text-[12px] font-['Montserrat_Alternates',sans-serif]">
+            Belum ada histori aktivitas.
+          </div>
+        )}
       </div>
     </section>
   );

@@ -61,17 +61,20 @@ export default function BottomNav({ activeTab, onTabChange, onOpenAddPlot, urgen
           </svg>
         </div>
 
-        {/* Floating Center Plus Button */}
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 z-20 flex items-center justify-center">
-          <button
-            onClick={() => (onOpenAddPlot ? onOpenAddPlot() : onTabChange('add-plot'))}
-            className="w-[47.4px] h-[47.4px] rounded-full bg-[#578a3e] text-white drop-shadow-[0px_0px_2px_#8fb37d] flex items-center justify-center p-[9px] cursor-pointer group hover:bg-[#4d7b36] active:scale-95 transition-all"
-            title="Tambah Tanaman"
-            aria-label="Tambah Tanaman"
-            style={{ WebkitTapHighlightColor: 'transparent' }}
-          >
-            <RiAddLine className="w-7 h-7 font-bold transition-transform duration-300 group-hover:rotate-90" />
-          </button>
+        
+        <div className="absolute -top-1 left-1/2 -translate-x-1/2 flex flex-col items-center justify-center z-10">
+          <div className="rounded-full bg-transparent p-1 shadow-[inset_0_2px_4px_rgba(0,0,0,0.3)]">
+             
+             <button
+              onClick={() => onOpenAddPlot ? onOpenAddPlot() : onTabChange('add-plot')}
+              className="w-[52px] h-[52px] rounded-full bg-[#5A843E] text-white flex items-center justify-center shadow-md active:scale-90 transition-all cursor-pointer group"
+              title="Tambah Tanaman"
+              aria-label="Tambah Tanaman"
+              style={{ WebkitTapHighlightColor: 'transparent' }}
+            >
+              <RiAddLine className="w-7 h-7 font-bold transition-transform duration-300" />
+            </button>
+          </div>
         </div>
 
         {/* Navigation Tabs Layer */}
