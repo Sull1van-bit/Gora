@@ -2,7 +2,7 @@ import React from 'react';
 
 export default function PlotDetailInfo({ plot }) {
   return (
-    <section className="grid grid-cols-12 gap-2.5 mt-5 px-4">
+    <section className="grid grid-cols-12 gap-2.5 mt-7 px-4">
       
       <div className="col-span-7 bg-[#fbf9f3] rounded-[10px] px-4 py-2.5 shadow-[0px_2px_2px_rgba(0,0,0,0.1)] flex flex-col justify-center border border-slate-100/60">
         <span className="font-['Montserrat_Alternates',sans-serif] font-medium text-[10px] text-[#3c3b3b]">

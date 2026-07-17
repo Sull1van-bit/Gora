@@ -82,7 +82,7 @@ export default function PlotsPage({
       </div>
 
       
-      <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
+      <div className="flex items-center gap-2 pb-1 px-2 scrollbar-none">
         <button
           onClick={() => setFilterStatus('all')}
           type="button"

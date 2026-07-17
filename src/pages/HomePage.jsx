@@ -79,7 +79,7 @@ export default function HomePage({
   };
 
   return (
-    <div className="animate-fade-in space-y-0 bg-[#f5f9ed] min-h-screen pb-[80px] relative">
+    <div className="animate-fade-in bg-[#f5f9ed] min-h-screen pb-[80px] relative">
       {/* SECTION A: Curved Green Hero Banner (Bg Dark) */}
       <section className="bg-gradient-to-t from-[#c6d5a2] to-[#25812a] rounded-b-[30px] pt-5 pb-24 px-6 relative overflow-hidden text-white shadow-xs">
         <div className="relative z-10 flex flex-col justify-between max-w-sm">
@@ -184,7 +184,7 @@ export default function HomePage({
           ref={sliderRef}
           onScroll={handleSliderScroll}
           style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-          className="flex gap-3 overflow-x-auto pb-2 scrollbar-none snap-x snap-mandatory [&::-webkit-scrollbar]:hidden"
+          className="flex gap-1.5 overflow-x-auto pb-2 scrollbar-none snap-x snap-mandatory [&::-webkit-scrollbar]:hidden"
         >
           {plotsToShow.map((plot) => (
             <div key={plot.id} className="snap-start shrink-0">
@@ -210,7 +210,7 @@ export default function HomePage({
 
         {/* Dots scroll bar indicator representing plots shown (max 5) */}
         {plotsToShow.length > 1 && (
-          <div className="flex items-center justify-center gap-1.5 mt-2">
+          <div className="flex items-center justify-center gap-1.5 mt-2 mb-4">
             {plotsToShow.map((_, idx) => (
               <button
                 key={idx}
@@ -227,13 +227,13 @@ export default function HomePage({
       </section>
 
       {/* SECTION D: 2-Column Grid (Perawatan hari ini & Insights) */}
-      <div className="grid grid-cols-2 gap-3 sm:gap-4 px-4 mt-3">
+      <div className="w-full flex flex-row gap-3 sm:gap-4 px-4 mt-3">
         {/* Perawatan hari ini Card */}
-        <section className="min-w-0">
+        <section className="w-1/2">
           <h2 className="text-[13px] sm:text-[15px] font-['Montserrat_Alternates',sans-serif] font-bold text-[#3c3b3b] mb-1.5 sm:mb-2 truncate">
             Perawatan hari ini
           </h2>
-          <div className="bg-[#fbf9f3] rounded-[20px] p-3 sm:p-4 shadow-[0px_2px_8px_rgba(0,0,0,0.06)] flex flex-col justify-between border border-slate-100 h-[190px] overflow-hidden">
+          <div className="bg-[#fbf9f3] rounded-[20px] p-3 sm:p-4 shadow-[0px_2px_8px_rgba(0,0,0,0.06)] flex flex-col justify-between border border-slate-100 h-[150px] overflow-hidden">
             <div className="space-y-1.5 sm:space-y-2 overflow-y-auto pr-0.5 flex-1">
               {pendingActions.length > 0 ? (
                 pendingActions.slice(0, 2).map((act, idx) => (
@@ -283,24 +283,32 @@ export default function HomePage({
         </section>
 
         {/* Insights Card */}
-        <section className="min-w-0">
+        <section className="w-1/2">
           <h2 className="text-[13px] sm:text-[15px] font-['Montserrat_Alternates',sans-serif] font-bold text-[#3c3b3b] mb-1.5 sm:mb-2 truncate">
             Insights
           </h2>
           <div
             onClick={() => onNavigateTab('insights')}
-            className="bg-[#fbf9f3] rounded-[20px] p-3 sm:p-4 shadow-[0px_2px_8px_rgba(0,0,0,0.06)] flex flex-col justify-between border border-slate-100 h-[190px] relative overflow-hidden cursor-pointer group hover:shadow-md transition-all"
+            className="bg-[#fbf9f3] rounded-[20px] p-3 sm:p-4 shadow-[0px_2px_8px_rgba(0,0,0,0.06)] flex flex-col justify-between border border-slate-100 h-[150px] relative overflow-hidden cursor-pointer group hover:shadow-md transition-all"
           >
             {/* Top Area */}
-            <div className="flex items-start justify-between gap-1 sm:gap-2">
-              <div className="text-[10px] sm:text-[11px] font-['Montserrat_Alternates',sans-serif] font-semibold text-[#3c3b3b] leading-snug min-w-0">
-                Tomat tumbuh <span className="text-[#578a3e] font-bold">3% lebih cepat</span> dari minggu ke-1
+            <div className="w-full flex flex-col">
+              <div className="text-[12px] sm:text-[11px] font-['Montserrat_Alternates',sans-serif] font-semibold text-[#3c3b3b] leading-snug min-w-0">
+                Tomat tumbuh 
+                <br />
+                <span className="text-[#578a3e] font-bold">
+                  3% lebih cepat
+                </span>
+                <br />
+                dari minggu ke-1
               </div>
-              <img src="/assets/figma/insights_growth.svg" className="w-[60px] h-[36px] sm:w-[85px] sm:h-[50px] object-contain shrink-0 -mr-1 group-hover:scale-105 transition-transform" alt="Growth Graph" />
+              <div className="flex justify-center">
+                <img src="/assets/figma/insights_growth.svg" className=" -mt-3 w-[120px] h-[50px] sm:w-[85px] sm:h-[50px] object-contain shrink-0 group-hover:scale-105 transition-transform" alt="Growth Graph" />
+              </div>
             </div>
 
             {/* Bottom Causes Area */}
-            <div className="pt-2 sm:pt-2.5 border-t border-slate-200/80 flex items-start gap-1.5 sm:gap-2.5 mt-1 min-w-0">
+            <div className="pt-1 sm:pt-2.5 border-t border-slate-200/80 flex items-start gap-1.5 sm:gap-2.5 mt-1 min-w-0">
               <img src="/assets/figma/bulb_filled.svg" className="w-4 h-4 sm:w-6 sm:h-6 shrink-0 mt-0.5" alt="Idea" />
               <div className="text-[8px] sm:text-[9px] font-['Montserrat_Alternates',sans-serif] font-semibold text-[#3c3b3b] leading-tight min-w-0">
                 <p className="mb-0.5 font-bold truncate">Kemungkinan penyebab:</p>

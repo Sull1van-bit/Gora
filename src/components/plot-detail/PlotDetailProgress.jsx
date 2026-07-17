@@ -141,7 +141,7 @@ export default function PlotDetailProgress({ plot, progressPct, setIsLogOpen }) 
   const nextStageName = currentStageIndex < stages.length - 1 ? stages[currentStageIndex + 1].name : "Siap Panen";
 
   return (
-    <section className="-mt-1 flex flex-col items-center justify-center relative z-20 w-full px-6">
+    <section className="mt-2 flex flex-col items-center justify-center relative z-20 w-full px-6">
       
       <div className="w-full bg-white rounded-[20px] p-5 shadow-[0px_2px_8px_rgba(0,0,0,0.06)] border border-slate-100 mt-2">
         <div className="flex justify-between items-end mb-4">
@@ -182,7 +182,7 @@ export default function PlotDetailProgress({ plot, progressPct, setIsLogOpen }) 
       
       <button
         onClick={() => setIsLogOpen(true)}
-        className="mt-7 bg-[#438347] hover:bg-[#366c3a] active:scale-95 text-white font-['Montserrat_Alternates',sans-serif] font-semibold text-[12px] px-8 py-2.5 rounded-full shadow-md transition-all flex items-center gap-2"
+        className="mt-5 bg-[#438347] hover:bg-[#366c3a] active:scale-95 text-white font-['Montserrat_Alternates',sans-serif] font-semibold text-[12px] px-8 py-2.5 rounded-full shadow-md transition-all flex items-center gap-2"
       >
         <span>Update Kondisi Lahan</span>
       </button>

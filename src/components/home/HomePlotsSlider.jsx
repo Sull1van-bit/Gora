@@ -4,7 +4,7 @@ import PlotCardMini from './PlotCardMini';
 export default function HomePlotsSlider({ onNavigateTab, sortedPlots, onSelectPlot, onOpenAddPlot }) {
   return (
     <section>
-      <div className="flex items-center justify-between mt-5 mb-3 px-4">
+      <div className="flex items-center justify-between mb-2 px-4">
         <h2 className="text-[15px] font-['Montserrat_Alternates',sans-serif] font-bold text-[#3c3b3b]">
           Lahan Saya
         </h2>
@@ -17,7 +17,7 @@ export default function HomePlotsSlider({ onNavigateTab, sortedPlots, onSelectPl
       </div>
 
       
-      <div className="flex gap-3 overflow-x-auto pb-3 px-4 scrollbar-none snap-x">
+      <div className="flex gap-2 overflow-x-auto pb-5 px-4 scrollbar-none snap-x">
         {sortedPlots.map((plot) => (
           <div key={plot.id} className="snap-start shrink-0">
             <PlotCardMini plot={plot} onSelect={onSelectPlot} />
