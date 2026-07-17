@@ -1,29 +1,24 @@
-import "@supabase/functions-js/edge-runtime.d.ts";
-import { withSupabase } from "@supabase/server";
-
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-export default {
-  fetch: async (req: Request) => {
-    // Handle CORS preflight request
-    if (req.method === "OPTIONS") {
-      return new Response("ok", { headers: corsHeaders });
+Deno.serve(async (req: Request) => {
+  // Handle CORS preflight request
+  if (req.method === "OPTIONS") {
+    return new Response("ok", { headers: corsHeaders });
+  }
+
+  try {
+    const body = await req.json();
+    const { weather, plots, actions } = body;
+
+    const apiKey = Deno.env.get("GEMINI_API_KEY");
+    if (!apiKey) {
+      throw new Error("GEMINI_API_KEY is not set in Edge Function secrets.");
     }
 
-    try {
-      // Use withSupabase to wrap the main logic if needed, but since we just need CORS and simple fetch:
-      const body = await req.json();
-      const { weather, plots, actions } = body;
-
-      const apiKey = Deno.env.get("GEMINI_API_KEY");
-      if (!apiKey) {
-        throw new Error("GEMINI_API_KEY is not set in Edge Function secrets.");
-      }
-
-      const prompt = `
+    const prompt = `
 Anda adalah AI asisten pertanian pintar untuk aplikasi "Gora".
 Analisis data berikut:
 Cuaca Hari Ini: ${JSON.stringify(weather)}
@@ -49,46 +44,45 @@ Format JSON strict:
 }
 Hanya kembalikan JSON, tanpa markdown formatting.`;
 
-      const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            contents: [
-              {
-                parts: [{ text: prompt }],
-              },
-            ],
-            generationConfig: {
-              responseMimeType: "application/json",
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          contents: [
+            {
+              parts: [{ text: prompt }],
             },
-          }),
-        }
-      );
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error("Gemini API Error:", errorText);
-        throw new Error("Failed to fetch from AI provider");
+          ],
+          generationConfig: {
+            responseMimeType: "application/json",
+          },
+        }),
       }
+    );
 
-      const aiData = await response.json();
-      const textResponse = aiData.candidates[0].content.parts[0].text;
-      const parsedResponse = JSON.parse(textResponse);
-
-      return new Response(JSON.stringify(parsedResponse), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 200,
-      });
-    } catch (error) {
-      console.error("Error in ai-recommendation:", error.message);
-      return new Response(JSON.stringify({ error: error.message }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 400,
-      });
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error("Gemini API Error:", errorText);
+      throw new Error("Failed to fetch from AI provider");
     }
-  },
-};
+
+    const aiData = await response.json();
+    const textResponse = aiData.candidates[0].content.parts[0].text;
+    const parsedResponse = JSON.parse(textResponse);
+
+    return new Response(JSON.stringify(parsedResponse), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      status: 200,
+    });
+  } catch (error: any) {
+    console.error("Error in ai-recommendation:", error.message);
+    return new Response(JSON.stringify({ error: error.message }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      status: 400,
+    });
+  }
+});

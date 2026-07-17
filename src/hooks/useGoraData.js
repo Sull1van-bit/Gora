@@ -126,7 +126,7 @@ export default function useGoraData() {
             const hasAct = finalActions.some(a => a.plot_id === p.id);
             if (!hasAct) {
               missingActions.push({
-                id: `act-${p.id}-1`,
+                id: crypto.randomUUID(),
                 plot_id: p.id,
                 plot_name: p.plot_name,
                 komoditas_icon: p.komoditas?.icon || p.komoditas_icon || '🌱',
@@ -137,7 +137,7 @@ export default function useGoraData() {
                 priority: 'high',
                 activity_type: 'Watering'
               }, {
-                id: `act-${p.id}-2`,
+                id: crypto.randomUUID(),
                 plot_id: p.id,
                 plot_name: p.plot_name,
                 komoditas_icon: p.komoditas?.icon || p.komoditas_icon || '🌱',
@@ -302,6 +302,11 @@ export default function useGoraData() {
 
   const addActions = useCallback((newActions) => {
     setActions(prev => [...newActions, ...prev]);
+    if (supabase) {
+      supabase.from('actions').insert(newActions).then(({ error }) => {
+        if (error) console.warn('[addActions] Supabase insert error:', error);
+      });
+    }
   }, []);
 
   const addPlot = useCallback(async (newPlotData) => {
@@ -335,7 +340,7 @@ export default function useGoraData() {
     const createAndStorePlotActions = (plotObj) => {
       const newPlotActions = [
         {
-          id: `act-${plotObj.id}-1`,
+          id: crypto.randomUUID(),
           plot_id: plotObj.id,
           plot_name: plotObj.plot_name,
           komoditas_icon: plotObj.komoditas_icon || '🌱',
@@ -347,7 +352,7 @@ export default function useGoraData() {
           activity_type: 'Watering'
         },
         {
-          id: `act-${plotObj.id}-2`,
+          id: crypto.randomUUID(),
           plot_id: plotObj.id,
           plot_name: plotObj.plot_name,
           komoditas_icon: plotObj.komoditas_icon || '🌱',
@@ -576,7 +581,7 @@ export default function useGoraData() {
         const { data: actData } = await supabase.from('actions').insert(newAction).select().single();
         if (actData) setActions(prev => [actData, ...prev]);
       } else {
-        setActions(prev => [{ ...newAction, id: `act-${Date.now()}` }, ...prev]);
+        setActions(prev => [{ ...newAction, id: crypto.randomUUID() }, ...prev]);
       }
     }
 

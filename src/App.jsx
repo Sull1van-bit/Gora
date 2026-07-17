@@ -51,6 +51,9 @@ export default function App() {
   const [authView, setAuthView] = useState('welcome'); // welcome | login | register | verify
   const [registeredEmail, setRegisteredEmail] = useState('');
   const [showSplash, setShowSplash] = useState(true);
+  const [isLogObservationModalOpen, setIsLogObservationModalOpen] = useState(false);
+  const [logObservationInitialPlotId, setLogObservationInitialPlotId] = useState(null);
+  const [logObservationInitialStep, setLogObservationInitialStep] = useState(1);
 
   useEffect(() => {
     const timer = setTimeout(() => {

@@ -37,32 +37,12 @@ export default function PlotCardFull({ plot, onSelect }) {
   let progressVal = plot.growth_progress || plot.progress || 15;
   let daysToHarvest = plot.days_to_harvest || 28;
 
+  let elapsedDays = 0;
   if (plot.planting_date && plot.estimated_harvest_date) {
     const start = new Date(plot.planting_date).getTime();
     const now = new Date().getTime();
     elapsedDays = Math.max(0, Math.floor((now - start) / (1000 * 60 * 60 * 24)));
   }
-
-  let currentStageIndex = 0;
-  let accumulatedDays = 0;
-  let daysToNext = 0;
-
-  for (let i = 0; i < stages.length; i++) {
-    accumulatedDays += stages[i].days;
-    if (elapsedDays < accumulatedDays) {
-      currentStageIndex = i;
-      daysToNext = accumulatedDays - elapsedDays;
-      break;
-    }
-    if (i === stages.length - 1) {
-      currentStageIndex = i;
-      daysToNext = 0; 
-    }
-  }
-
-  const nextStageName = currentStageIndex < stages.length - 1 ? stages[currentStageIndex + 1].name : "Siap Panen";
-
-
   return (
     <div
       onClick={() => onSelect(plot.id)}
