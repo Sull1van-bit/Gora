@@ -2,13 +2,13 @@ import React from 'react';
 import PlotCardMini from '../components/home/PlotCardMini';
 import useUserLocation from '../hooks/useUserLocation';
 
-export default function HomePage({ 
-  plots, 
-  actions, 
-  weather, 
-  komoditasList, 
-  onCompleteAction, 
-  onSelectPlot, 
+export default function HomePage({
+  plots,
+  actions,
+  weather,
+  komoditasList,
+  onCompleteAction,
+  onSelectPlot,
   onNavigateTab,
   onOpenAddPlot
 }) {
@@ -35,6 +35,19 @@ export default function HomePage({
     return 'Selamat Malam,';
   };
 
+  const getPriorityTextColor = (priority) => {
+    switch (priority?.toLowerCase()) {
+      case 'high':
+        return 'text-[#ce4949]';
+      case 'medium':
+        return 'text-[#d89710]';
+      case 'low':
+        return 'text-[#3a6c3d]';
+      default:
+        return 'text-[#3c3b3b]';
+    }
+  };
+
   return (
     <div className="animate-fade-in space-y-0">
       {/* SECTION A: Curved Green Hero Banner (Bg Dark) */}
@@ -55,10 +68,10 @@ export default function HomePage({
         </div>
 
         {/* Right Streak Character Illustration */}
-        <img 
-          src="/assets/figma/streak.svg" 
-          className="absolute -right-2 top-3 w-[150px] h-[180px] pointer-events-none object-contain select-none" 
-          alt="Streak Farmer" 
+        <img
+          src="/assets/figma/streak.svg"
+          className="absolute -right-2 top-3 w-[150px] h-[180px] pointer-events-none object-contain select-none"
+          alt="Streak Farmer"
         />
       </section>
 
@@ -68,16 +81,16 @@ export default function HomePage({
         <div className="flex items-center gap-1 font-['Montserrat_Alternates',sans-serif] font-semibold text-[11px] text-[#3c3b3b] mb-3">
           <span>📍</span>
           <span>
-            {locLoading 
-              ? 'Mendeteksi lokasi...' 
-              : kecamatan && provinsi 
-                ? `${kecamatan}, ${provinsi}` 
+            {locLoading
+              ? 'Mendeteksi lokasi...'
+              : kecamatan && provinsi
+                ? `${kecamatan}, ${provinsi}`
                 : 'Serpong, Tangerang'}
           </span>
         </div>
 
         {/* 3-Column Weather Stats Grid */}
-        <div 
+        <div
           onClick={() => onNavigateTab('insights', 'weather')}
           className="flex items-center justify-between text-center divide-x divide-slate-200/80 cursor-pointer group"
         >
@@ -145,7 +158,7 @@ export default function HomePage({
           ))}
 
           {/* Tambah Tanaman Card */}
-          <div 
+          <div
             onClick={onOpenAddPlot}
             className="w-[130px] sm:w-[140px] border-2 border-dashed border-[#8f8e94]/50 rounded-[20px] p-4 shrink-0 flex flex-col items-center justify-center gap-2 cursor-pointer bg-white/40 hover:bg-white/80 transition-all active:scale-95 group snap-start"
           >
@@ -157,20 +170,20 @@ export default function HomePage({
         </div>
       </section>
 
-      {/* SECTION D: 2-Column Grid (Prioritas Hari Ini & Insights) */}
+      {/* SECTION D: 2-Column Grid (Perawatan hari ini & Insights) */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 px-4 mt-3">
-        {/* Prioritas Hari Ini Card */}
+        {/* Perawatan hari ini Card */}
         <section>
           <h2 className="text-[15px] font-['Montserrat_Alternates',sans-serif] font-bold text-[#3c3b3b] mb-2">
-            Prioritas Hari Ini
+            Perawatan hari ini
           </h2>
           <div className="bg-[#fbf9f3] rounded-[20px] p-4 shadow-[0px_2px_8px_rgba(0,0,0,0.06)] flex flex-col justify-between border border-slate-100 h-[190px]">
             <div className="space-y-2 overflow-y-auto pr-1 flex-1">
               {pendingActions.length > 0 ? (
                 pendingActions.slice(0, 2).map((act, idx) => (
-                  <div 
-                    key={act.id} 
-                    onClick={() => onCompleteAction(act.id)} 
+                  <div
+                    key={act.id}
+                    onClick={() => onCompleteAction(act.id)}
                     className="flex items-center justify-between gap-2.5 cursor-pointer group py-1 border-b border-slate-100 last:border-0"
                   >
                     <div className="flex items-center gap-2.5 min-w-0">
@@ -178,7 +191,7 @@ export default function HomePage({
                         {idx === 0 ? '🌊' : '🚿'}
                       </div>
                       <div className="min-w-0">
-                        <p className="text-[11px] font-['Montserrat_Alternates',sans-serif] font-bold text-[#3c3b3b] truncate group-hover:text-emerald-700 transition-colors">
+                        <p className={`text-[11px] font-['Montserrat_Alternates',sans-serif] font-bold truncate transition-opacity group-hover:opacity-80 ${getPriorityTextColor(act.priority)}`}>
                           {act.title}
                         </p>
                         <p className="text-[9px] font-['Montserrat_Alternates',sans-serif] text-[#6f6e72] truncate">
@@ -192,7 +205,7 @@ export default function HomePage({
               ) : (
                 <div className="flex flex-col items-center justify-center h-full text-center py-2">
                   <span className="text-2xl mb-1">🎉</span>
-                  <p className="text-[11px] font-bold text-[#28502d] font-['Montserrat_Alternates',sans-serif]">Semua Tugas Selesai!</p>
+                  <p className="text-[11px] font-bold text-[#28502d] font-['Montserrat_Alternates',sans-serif]">Semua perawatan hari ini telah diselesaikan</p>
                   <p className="text-[9px] text-[#6f6e72]">Lahan Anda dalam perawatan optimal.</p>
                 </div>
               )}
@@ -204,9 +217,9 @@ export default function HomePage({
                 <span>{completedActionsCount}/{totalActionsCount} Selesai</span>
               </div>
               <div className="w-full bg-[#d9d9d9] h-[5px] rounded-full overflow-hidden">
-                <div 
-                  className="bg-[#28502d] h-full rounded-full transition-all duration-300" 
-                  style={{ width: `${(completedActionsCount / Math.max(1, totalActionsCount)) * 100}%` }} 
+                <div
+                  className="bg-[#28502d] h-full rounded-full transition-all duration-300"
+                  style={{ width: `${(completedActionsCount / Math.max(1, totalActionsCount)) * 100}%` }}
                 />
               </div>
             </div>
@@ -218,7 +231,7 @@ export default function HomePage({
           <h2 className="text-[15px] font-['Montserrat_Alternates',sans-serif] font-bold text-[#3c3b3b] mb-2">
             Insights
           </h2>
-          <div 
+          <div
             onClick={() => onNavigateTab('insights')}
             className="bg-[#fbf9f3] rounded-[20px] p-4 shadow-[0px_2px_8px_rgba(0,0,0,0.06)] flex flex-col justify-between border border-slate-100 h-[190px] relative overflow-hidden cursor-pointer group hover:shadow-md transition-all"
           >
@@ -259,7 +272,7 @@ export default function HomePage({
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 px-4">
           {/* Berita Card */}
-          <div 
+          <div
             onClick={() => onNavigateTab('insights')}
             className="bg-[#fbf9f3] rounded-[20px] p-4 shadow-[0px_2px_8px_rgba(0,0,0,0.06)] flex items-center justify-between gap-3 border border-slate-100 cursor-pointer hover:shadow-md transition-all h-[135px]"
           >
@@ -274,16 +287,16 @@ export default function HomePage({
                 Tips & Trik • Baca 5 menit
               </p>
             </div>
-            <img 
-              src="/assets/figma/berita.png" 
-              className="w-[68px] h-[68px] rounded-[16px] object-cover shrink-0 shadow-xs" 
+            <img
+              src="/assets/figma/berita.png"
+              className="w-[68px] h-[68px] rounded-[16px] object-cover shrink-0 shadow-xs"
               alt="Berita"
               onError={(e) => { e.target.src = '/assets/figma/image9.png'; }}
             />
           </div>
 
           {/* Pasar Card */}
-          <div 
+          <div
             onClick={() => onNavigateTab('insights', 'market')}
             className="bg-[#fbf9f3] rounded-[20px] p-4 shadow-[0px_2px_8px_rgba(0,0,0,0.06)] flex flex-col justify-between border border-slate-100 cursor-pointer hover:shadow-md transition-all h-[135px]"
           >

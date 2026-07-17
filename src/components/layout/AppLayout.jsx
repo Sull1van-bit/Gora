@@ -1,5 +1,6 @@
 import React from 'react';
 import BottomNav from './BottomNav';
+import BrandLogo from './BrandLogo';
 
 export default function AppLayout({ 
   children, 
@@ -41,14 +42,7 @@ export default function AppLayout({
                     {headerTitle}
                   </h1>
                 ) : (
-                  <div className="flex items-center gap-2">
-                    <span className="w-7 h-7 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-700 flex items-center justify-center text-white font-extrabold text-sm shadow-sm">
-                      G
-                    </span>
-                    <span className="text-xl font-black tracking-tight bg-gradient-to-r from-emerald-600 to-teal-800 bg-clip-text text-transparent font-['Montserrat_Alternates',sans-serif]">
-                      GORA
-                    </span>
-                  </div>
+                  <BrandLogo compact />
                 )}
 
                 {headerSubtitle && (

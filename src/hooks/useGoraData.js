@@ -251,6 +251,18 @@ export default function useGoraData() {
     }));
   }, [plots]);
 
+  // Reset all demo data back to the initial seed state.
+  // Use this before a live demo to clear out any leftover test data.
+  const resetDemoData = useCallback(() => {
+    localStorage.clear();
+    localStorage.setItem('gora_plots', JSON.stringify(INITIAL_PLOTS));
+    localStorage.setItem('gora_actions', JSON.stringify(INITIAL_ACTIONS));
+    localStorage.setItem('gora_activities', JSON.stringify(INITIAL_ACTIVITIES));
+    setPlots([...INITIAL_PLOTS]);
+    setActions([...INITIAL_ACTIONS]);
+    setActivities([...INITIAL_ACTIVITIES]);
+  }, []);
+
   return {
     plots,
     komoditasList,
@@ -262,5 +274,6 @@ export default function useGoraData() {
     completeAction,
     logActivity,
     reportIssue,
+    resetDemoData,
   };
 }

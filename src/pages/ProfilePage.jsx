@@ -1,8 +1,6 @@
 import React, { useState } from 'react';
-import useUserLocation from '../hooks/useUserLocation';
 
-export default function ProfilePage({ plots }) {
-  const { provinsi, kecamatan, refetch: refetchLocation } = useUserLocation();
+export default function ProfilePage({ plots, onResetDemoData, provinsi, kecamatan, refetchLocation }) {
   const [notifEnabled, setNotifEnabled] = useState(true);
   const [offlineSync, setOfflineSync] = useState(true);
   const [language, setLanguage] = useState('id'); // 'id' | 'en'
@@ -79,13 +77,11 @@ export default function ProfilePage({ plots }) {
           </div>
           <button
             onClick={() => setNotifEnabled(!notifEnabled)}
-            className={`w-12 h-6 rounded-full transition-colors relative p-0.5 ${
-              notifEnabled ? 'bg-emerald-500' : 'bg-slate-300'
-            }`}
+            className={`w-12 h-6 rounded-full transition-colors relative p-0.5 ${notifEnabled ? 'bg-emerald-500' : 'bg-slate-300'
+              }`}
           >
-            <div className={`w-5 h-5 rounded-full bg-white shadow-md transition-transform ${
-              notifEnabled ? 'translate-x-6' : 'translate-x-0'
-            }`} />
+            <div className={`w-5 h-5 rounded-full bg-white shadow-md transition-transform ${notifEnabled ? 'translate-x-6' : 'translate-x-0'
+              }`} />
           </button>
         </div>
 
@@ -97,13 +93,11 @@ export default function ProfilePage({ plots }) {
           </div>
           <button
             onClick={() => setOfflineSync(!offlineSync)}
-            className={`w-12 h-6 rounded-full transition-colors relative p-0.5 ${
-              offlineSync ? 'bg-emerald-500' : 'bg-slate-300'
-            }`}
+            className={`w-12 h-6 rounded-full transition-colors relative p-0.5 ${offlineSync ? 'bg-emerald-500' : 'bg-slate-300'
+              }`}
           >
-            <div className={`w-5 h-5 rounded-full bg-white shadow-md transition-transform ${
-              offlineSync ? 'translate-x-6' : 'translate-x-0'
-            }`} />
+            <div className={`w-5 h-5 rounded-full bg-white shadow-md transition-transform ${offlineSync ? 'translate-x-6' : 'translate-x-0'
+              }`} />
           </button>
         </div>
 
@@ -137,6 +131,17 @@ export default function ProfilePage({ plots }) {
           <span className="text-slate-400">Database Engine</span>
           <span className="font-bold text-emerald-600">Supabase + Local Cache Sync</span>
         </div>
+
+        <button
+          onClick={() => {
+            if (window.confirm('Reset semua data demo ke kondisi awal? Aksi ini tidak dapat dibatalkan.')) {
+              onResetDemoData?.();
+            }
+          }}
+          className="w-full mt-3 py-2.5 bg-amber-50 hover:bg-amber-100 text-amber-700 font-bold rounded-xl border border-amber-200 transition-all text-center"
+        >
+          🔄 Reset Data Demo
+        </button>
 
         <button
           onClick={() => alert('Fitur keluar akun dan pencadangan data ke cloud siap diaktifkan.')}

@@ -9,7 +9,7 @@ export default function ActionItemRow({ action, onComplete, onSelectPlot }) {
           badgeClass: 'bg-rose-100 text-rose-700 border-rose-300',
           accent: 'border-l-4 border-l-rose-500',
         };
-      case 'today':
+      case 'today': 
         return {
           label: '🟡 Due Today',
           badgeClass: 'bg-amber-100 text-amber-800 border-amber-300',
@@ -45,7 +45,7 @@ export default function ActionItemRow({ action, onComplete, onSelectPlot }) {
       </button>
 
       {/* Main content area */}
-      <div 
+      <div
         onClick={() => onSelectPlot && onSelectPlot(action.plot_id)}
         className="flex-1 min-w-0 cursor-pointer"
       >

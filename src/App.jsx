@@ -7,20 +7,26 @@ import InsightsPage from './pages/InsightsPage';
 import ProfilePage from './pages/ProfilePage';
 import AddPlotModal from './components/plots/AddPlotModal';
 import useGoraData from './hooks/useGoraData';
+import useUserLocation from './hooks/useUserLocation';
+import useWeather from './hooks/useWeather';
 
 export default function App() {
   const {
     plots,
     actions,
     activities,
-    weather,
     komoditasList,
     newsList,
     completeAction,
     addPlot,
     logActivity,
     reportIssue,
+    resetDemoData,
   } = useGoraData();
+
+  const { latitude, longitude, provinsi, kecamatan, loading: locLoading, refetch: refetchLocation } = useUserLocation();
+  const { weather, hourlyForecast, weeklyForecast } = useWeather(latitude, longitude);
+  const locationLabel = kecamatan && provinsi ? `${kecamatan}, ${provinsi}` : null;
 
   const [activeTab, setActiveTab] = useState('home'); // 'home' | 'plots' | 'insights' | 'profile' | 'plot-detail'
   const [selectedPlotId, setSelectedPlotId] = useState(null);
@@ -61,8 +67,8 @@ export default function App() {
     }
   };
 
-  const urgentOrAttentionCount = plots.filter(p => p.status === 'urgent').length + 
-                                 actions.filter(a => a.status === 'overdue').length;
+  const urgentOrAttentionCount = plots.filter(p => p.status === 'urgent').length +
+    actions.filter(a => a.status === 'overdue').length;
 
   const getHeaderProps = () => {
     switch (activeTab) {
@@ -117,6 +123,9 @@ export default function App() {
             onSelectPlot={(id) => navigateTo('plot-detail', id)}
             onNavigateTab={navigateTo}
             onOpenAddPlot={() => setIsAddPlotModalOpen(true)}
+            provinsi={provinsi}
+            kecamatan={kecamatan}
+            locLoading={locLoading}
           />
         )}
 
@@ -147,13 +156,22 @@ export default function App() {
         {activeTab === 'insights' && (
           <InsightsPage
             weather={weather}
+            hourlyForecast={hourlyForecast}
+            weeklyForecast={weeklyForecast}
+            locationLabel={locationLabel}
             newsList={newsList}
             initialTab={insightsTab}
           />
         )}
 
         {activeTab === 'profile' && (
-          <ProfilePage plots={plots} />
+          <ProfilePage
+            plots={plots}
+            onResetDemoData={resetDemoData}
+            provinsi={provinsi}
+            kecamatan={kecamatan}
+            refetchLocation={refetchLocation}
+          />
         )}
       </AppLayout>
 
@@ -162,6 +180,8 @@ export default function App() {
         onClose={() => setIsAddPlotModalOpen(false)}
         onSave={addPlot}
         komoditasList={komoditasList}
+        provinsi={provinsi}
+        kecamatan={kecamatan}
       />
     </>
   );
