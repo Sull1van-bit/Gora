@@ -5,7 +5,7 @@ import ArticlesView from '../components/insights/ArticlesView';
 import ArticleDetailModal from '../components/insights/ArticleDetailModal';
 import { RiSunCloudyLine, RiLineChartLine, RiNewspaperLine } from 'react-icons/ri';
 
-export default function InsightsPage({ weather, newsList, newsLoading, initialTab = 'weather' }) {
+export default function InsightsPage({ weather, hourlyForecast, weeklyForecast, locationLabel, newsList, newsLoading, initialTab = 'weather' }) {
   const [activeSubTab, setActiveSubTab] = useState(initialTab);
   const [selectedArticle, setSelectedArticle] = useState(null);
 
@@ -56,7 +56,12 @@ export default function InsightsPage({ weather, newsList, newsLoading, initialTa
       
       <div className="pt-1">
         {activeSubTab === 'weather' && (
-          <WeatherDetailView weather={weather} />
+          <WeatherDetailView 
+            weather={weather} 
+            hourlyForecast={hourlyForecast} 
+            weeklyForecast={weeklyForecast} 
+            locationLabel={locationLabel} 
+          />
         )}
 
         {activeSubTab === 'market' && (

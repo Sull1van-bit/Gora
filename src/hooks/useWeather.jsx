@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import useUserLocation from './useUserLocation';
+import { WEATHER_PREVIEW } from '../services/dataStore';
 import { 
   RiSunFill, 
   RiSunCloudyFill, 
@@ -30,13 +31,13 @@ export default function useWeather() {
   const [error, setError] = useState(null);
 
   const fetchWeather = useCallback(async () => {
-    if (locLoading) return;
-
     const fetchLat = lat ?? -7.8830;
     const fetchLon = lon ?? 112.5263;
     const locationName = lat && lon && (kecamatan || kota || provinsi)
       ? [kecamatan, kota, provinsi].filter(Boolean).join(', ')
-      : 'Bumiaji, Kota Batu (Default)';
+      : kecamatan && provinsi
+        ? `${kecamatan}, ${provinsi}`
+        : 'Kota Batu, Jawa Timur (Default)';
 
     setLoading(true);
     setError(null);
@@ -123,5 +124,42 @@ export default function useWeather() {
     fetchWeather();
   }, [fetchWeather]);
 
-  return { weatherData, loading, error, refetch: fetchWeather };
+  const defaultHourly = [
+    { time: '08:00', temp: 24, icon: 'partly_cloudy', label: 'Pagi' },
+    { time: '11:00', temp: 28, icon: 'sun', label: 'Siang' },
+    { time: '14:00', temp: 29, icon: 'partly_cloudy', label: 'Siang' },
+    { time: '17:00', temp: 26, icon: 'cloud', label: 'Sore' }
+  ];
+
+  const defaultWeekly = [
+    { day: 'Hari Ini', temp: '20° - 28°C', icon: 'partly_cloudy', cond: 'Cerah Berawan', rain: '25%' },
+    { day: 'Besok', temp: '21° - 29°C', icon: 'sun', cond: 'Cerah', rain: '15%' },
+    { day: 'Lusa', temp: '21° - 27°C', icon: 'cloud', cond: 'Berawan', rain: '40%' },
+    { day: 'Kamis', temp: '20° - 26°C', icon: 'rain', cond: 'Gerimis Ringan', rain: '65%' },
+    { day: 'Jumat', temp: '20° - 28°C', icon: 'partly_cloudy', cond: 'Cerah Berawan', rain: '30%' },
+    { day: 'Sabtu', temp: '21° - 28°C', icon: 'partly_cloudy', cond: 'Cerah Berawan', rain: '20%' }
+  ];
+
+  const hourlyForecast = weatherData?.hourlyForecast || defaultHourly;
+  const weeklyForecast = weatherData?.weeklyForecast || defaultWeekly;
+  const effectiveWeatherData = weatherData || {
+    ...WEATHER_PREVIEW,
+    locationName: lat && lon && (kecamatan || kota || provinsi)
+      ? [kecamatan, kota, provinsi].filter(Boolean).join(', ')
+      : kecamatan && provinsi
+        ? `${kecamatan}, ${provinsi}`
+        : 'Mendeteksi lokasi...',
+    hourlyForecast: defaultHourly,
+    weeklyForecast: defaultWeekly,
+  };
+
+  return { 
+    weatherData: effectiveWeatherData, 
+    hourlyForecast, 
+    weeklyForecast, 
+    loading, 
+    error, 
+    refetch: fetchWeather 
+  };
 }
+
