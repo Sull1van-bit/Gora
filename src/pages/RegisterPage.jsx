@@ -3,7 +3,7 @@ import { supabase } from '../lib/supabaseClient';
 import { RiEyeCloseLine, RiEyeLine, RiArrowLeftSLine } from 'react-icons/ri';
 import { FaGoogle, FaFacebookF, FaApple } from 'react-icons/fa';
 
-export default function RegisterPage({ onBackToWelcome, onRegisterSuccess }) {
+export default function RegisterPage({ onBackToLogin, onRegisterSuccess }) {
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -61,7 +61,7 @@ export default function RegisterPage({ onBackToWelcome, onRegisterSuccess }) {
 
         {/* Header */}
         <div className="pt-14 px-6 relative z-10">
-          <button onClick={onBackToWelcome} className="text-[#3a6c3d] text-3xl mb-6 active:scale-95 transition-transform">
+          <button onClick={onBackToLogin} className="text-[#3a6c3d] text-3xl mb-6 active:scale-95 transition-transform">
             <RiArrowLeftSLine />
           </button>
           <div className="text-center px-4">
