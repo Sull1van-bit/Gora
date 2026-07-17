@@ -22,95 +22,135 @@ async function fireIncrementStreak() {
 }
 
 export default function useGoraData() {
-  const [plots, setPlots] = useState([]);
+  const [plots, setPlots] = useState(() => {
+    const saved = localStorage.getItem('gora_plots');
+    return saved ? JSON.parse(saved) : INITIAL_PLOTS;
+  });
 
   const [actions, setActions] = useState(() => {
     const saved = localStorage.getItem('gora_actions');
     return saved ? JSON.parse(saved) : INITIAL_ACTIONS;
   });
 
-  const [activities, setActivities] = useState([]);
+  const [activities, setActivities] = useState(() => {
+    const saved = localStorage.getItem('gora_activities');
+    return saved ? JSON.parse(saved) : INITIAL_ACTIVITIES;
+  });
 
   const [komoditasList, setKomoditasList] = useState(INITIAL_KOMODITAS);
   const [newsList] = useState(INITIAL_NEWS);
   const [weather] = useState(WEATHER_PREVIEW);
 
-
+  // Keep local storage strictly as a fast offline fallback cache
+  useEffect(() => {
+    localStorage.setItem('gora_plots', JSON.stringify(plots));
+  }, [plots]);
 
   useEffect(() => {
     localStorage.setItem('gora_actions', JSON.stringify(actions));
   }, [actions]);
 
-
-
   useEffect(() => {
-    async function fetchSupabasePlots() {
+    localStorage.setItem('gora_activities', JSON.stringify(activities));
+  }, [activities]);
+
+  // Fetch live Supabase data on mount
+  useEffect(() => {
+    async function fetchSupabaseData() {
       if (!supabase) return;
       try {
-        const { data, error } = await supabase.from('plots').select('*');
-        if (!error && data) {
-          setPlots(data);
+        // 1. Fetch Komoditas
+        const { data: komData } = await supabase.from('komoditas').select('*');
+        if (komData && komData.length > 0) {
+          setKomoditasList(komData);
         }
-      } catch (err) {
-        console.warn('[useGoraData] Supabase sync fallback to local store:', err);
-      }
-    }
-    fetchSupabasePlots();
-  }, []);
 
-  useEffect(() => {
-    async function fetchActivities() {
-      if (!supabase) return;
-      try {
-        const { data, error } = await supabase
-          .from('plot_activities')
-          .select('*, plots!inner(plot_name, komoditas_id)')
+        // 2. Fetch Plots with joined Komoditas info
+        const { data: plotsData, error: plotsErr } = await supabase
+          .from('plots')
+          .select('*, komoditas(*)')
           .order('created_at', { ascending: false });
-          
-        if (!error && data) {
-          // Map DB structure to frontend structure
-          const mapped = data.map(d => ({
+
+        if (!plotsErr && plotsData) {
+          const mappedPlots = plotsData.map(p => ({
+            ...p,
+            komoditas_nama: p.komoditas?.nama || p.komoditas_nama || 'Tanaman',
+            komoditas_icon: p.komoditas?.icon || p.komoditas_icon || '🌱',
+            growth_progress: p.growth_progress ?? 15,
+            status: p.status || 'ontrack',
+            priority_score: p.priority_score ?? 30,
+            last_watered: p.last_watered || 'Belum dilakukan',
+            last_fertilized: p.last_fertilized || 'Belum dilakukan'
+          }));
+          if (mappedPlots.length > 0) {
+            setPlots(mappedPlots);
+          }
+        }
+
+        // 3. Fetch Actions
+        const { data: actionsData, error: actionsErr } = await supabase
+          .from('actions')
+          .select('*')
+          .order('created_at', { ascending: false });
+
+        if (!actionsErr && actionsData) {
+          if (actionsData.length > 0) {
+            setActions(actionsData);
+          } else {
+            // Seed initial actions into Supabase if table is empty so UI has daily checklist right away
+            await supabase.from('actions').insert(INITIAL_ACTIONS);
+            setActions(INITIAL_ACTIONS);
+          }
+        }
+
+        // 4. Fetch Activities (from plot_activities)
+        const { data: activitiesData, error: actErr } = await supabase
+          .from('plot_activities')
+          .select('*, plots(plot_name, komoditas_id)')
+          .order('created_at', { ascending: false });
+
+        if (!actErr && activitiesData && activitiesData.length > 0) {
+          const mappedActivities = activitiesData.map(d => ({
             id: d.id,
             plot_id: d.plot_id,
-            plot_name: d.plots?.plot_name,
+            plot_name: d.plots?.plot_name || 'Lahan',
             activity_type: d.activity_type,
             title: `Aktivitas ${d.activity_type}`,
             notes: d.description || '-',
-            date: new Date(d.created_at).toLocaleDateString('id-ID', {day:'numeric', month:'short', hour:'2-digit', minute:'2-digit'}) + ' WIB',
-            timestamp: d.created_at
+            date: new Date(d.created_at || Date.now()).toLocaleDateString('id-ID', {
+              day: 'numeric',
+              month: 'short',
+              hour: '2-digit',
+              minute: '2-digit'
+            }) + ' WIB',
+            timestamp: d.created_at || new Date().toISOString()
           }));
-          setActivities(mapped);
-        }
-      } catch(err) {
-        console.warn('Error fetching activities:', err);
-      }
-    }
-    fetchActivities();
-  }, []);
-
-  useEffect(() => {
-    async function fetchSupabaseCrops() {
-      if (!supabase) return;
-      try {
-        const { data, error } = await supabase.from('komoditas').select('*');
-        if (!error && data && data.length > 0) {
-          setKomoditasList(data);
+          setActivities(mappedActivities);
         }
       } catch (err) {
+        console.warn('[useGoraData] Supabase sync fallback to offline store:', err);
       }
     }
-    fetchSupabaseCrops();
+    fetchSupabaseData();
   }, []);
 
-  const completeAction = useCallback((actionId) => {
+  const completeAction = useCallback(async (actionId) => {
     const targetAction = actions.find(a => a.id === actionId);
     if (!targetAction) return;
 
-    setActions(prev => prev.map(a => a.id === actionId ? { ...a, status: 'completed' } : a));
-
     const now = new Date();
     const timeStr = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
-    const newActivity = {
+
+    // 1. Update action status to completed
+    setActions(prev => prev.map(a => a.id === actionId ? { ...a, status: 'completed' } : a));
+    if (supabase) {
+      supabase.from('actions').update({ status: 'completed' }).eq('id', actionId).then(({ error }) => {
+        if (error) console.warn('[completeAction] Supabase update error:', error);
+      });
+    }
+
+    // 2. Log activity
+    const newActivityUI = {
       id: `hist-${Date.now()}`,
       plot_id: targetAction.plot_id,
       plot_name: targetAction.plot_name,
@@ -121,183 +161,283 @@ export default function useGoraData() {
       date: `Hari ini, ${timeStr} WIB`,
       timestamp: now.toISOString(),
     };
-    setActivities(prev => [newActivity, ...prev]);
+    setActivities(prev => [newActivityUI, ...prev]);
+
+    if (supabase) {
+      const { data: { session } } = await supabase.auth.getSession();
+      supabase.from('plot_activities').insert({
+        plot_id: targetAction.plot_id,
+        activity_type: targetAction.activity_type || 'General Task',
+        description: targetAction.description || 'Tindakan diselesaikan melalui daftar tugas harian.',
+        created_by: session?.user?.id
+      }).then(({ error }) => {
+        if (error) console.warn('[completeAction] Supabase insert activity error:', error);
+      });
+    }
+
     fireIncrementStreak();
 
-    setPlots(prevPlots => prevPlots.map(p => {
-      if (p.id === targetAction.plot_id) {
-        const remainingActions = actions.filter(
-          a => a.plot_id === p.id && a.id !== actionId && a.status !== 'completed'
-        );
-        const hasUrgent = remainingActions.some(a => a.status === 'overdue');
-        const hasAttention = remainingActions.some(a => a.status === 'today' || a.status === 'soon');
-        
-        let newStatus = 'ontrack';
-        let newStatusText = 'Semua aksi rutin selesai (On Track)';
-        let newPriority = 25;
+    // 3. Update target plot status & priority
+    const targetPlot = plots.find(p => p.id === targetAction.plot_id);
+    if (targetPlot) {
+      const remainingActions = actions.filter(
+        a => a.plot_id === targetPlot.id && a.id !== actionId && a.status !== 'completed'
+      );
+      const hasUrgent = remainingActions.some(a => a.status === 'overdue');
+      const hasAttention = remainingActions.some(a => a.status === 'today' || a.status === 'soon');
+      
+      let newStatus = 'ontrack';
+      let newStatusText = 'Semua aksi rutin selesai (On Track)';
+      let newPriority = 25;
 
-        if (hasUrgent) {
-          newStatus = 'urgent';
-          newStatusText = 'Masih ada aksi tertunda';
-          newPriority = 85;
-        } else if (hasAttention) {
-          newStatus = 'attention';
-          newStatusText = 'Aksi lanjutan terjadwal segera';
-          newPriority = 60;
+      if (hasUrgent) {
+        newStatus = 'urgent';
+        newStatusText = 'Masih ada aksi tertunda';
+        newPriority = 85;
+      } else if (hasAttention) {
+        newStatus = 'attention';
+        newStatusText = 'Aksi lanjutan terjadwal segera';
+        newPriority = 60;
+      }
+
+      const updatedLastWatered = targetAction.activity_type === 'Watering' ? 'Baru saja (Hari ini)' : targetPlot.last_watered;
+      const updatedLastFertilized = targetAction.activity_type === 'Fertilizing' ? 'Baru saja (Hari ini)' : targetPlot.last_fertilized;
+      const updatedAt = now.toISOString();
+
+      setPlots(prevPlots => prevPlots.map(p => {
+        if (p.id === targetPlot.id) {
+          return {
+            ...p,
+            status: newStatus,
+            status_text: newStatusText,
+            priority_score: newPriority,
+            last_watered: updatedLastWatered,
+            last_fertilized: updatedLastFertilized,
+            updated_at: updatedAt,
+          };
         }
+        return p;
+      }));
 
-        return {
-          ...p,
+      if (supabase) {
+        supabase.from('plots').update({
           status: newStatus,
           status_text: newStatusText,
           priority_score: newPriority,
-          last_watered: targetAction.activity_type === 'Watering' ? 'Baru saja (Hari ini)' : p.last_watered,
-          last_fertilized: targetAction.activity_type === 'Fertilizing' ? 'Baru saja (Hari ini)' : p.last_fertilized,
-          updated_at: now.toISOString(),
-        };
+          last_watered: updatedLastWatered,
+          last_fertilized: updatedLastFertilized,
+          updated_at: updatedAt,
+        }).eq('id', targetPlot.id).then(({ error }) => {
+          if (error) console.warn('[completeAction] Supabase update plot error:', error);
+        });
       }
-      return p;
-    }));
-  }, [actions]);
+    }
+  }, [actions, plots]);
 
   const addPlot = useCallback(async (newPlotData) => {
     const kom = komoditasList.find(k => k.id === newPlotData.komoditas_id) || komoditasList[0];
     
-    if (!supabase) return;
-    
-    const { data: { session } } = await supabase.auth.getSession();
-    const userId = session?.user?.id;
+    let userId = null;
+    if (supabase) {
+      const { data: { session } } = await supabase.auth.getSession();
+      userId = session?.user?.id || null;
+    }
 
     const dbPlot = {
       plot_name: newPlotData.plot_name || 'Plot Baru',
-      komoditas_id: kom?.id,
+      komoditas_id: kom?.id || null,
       area: Number(newPlotData.area) || 500,
       area_unit: newPlotData.unit || 'm²',
       location: newPlotData.location || 'Lokasi Terdeteksi',
       planting_date: newPlotData.planting_date || new Date().toISOString().split('T')[0],
       estimated_harvest_date: newPlotData.estimated_harvest_date || '2026-10-01',
       current_growth_stage: newPlotData.current_growth_stage || 'Seedling (Pembibitan)',
+      growth_progress: 15,
+      status: 'ontrack',
+      status_text: 'Plot baru dibuat, masa pembibitan berjalan',
+      priority_score: 30,
+      last_watered: 'Hari ini',
+      last_fertilized: 'Belum dilakukan',
       updated_at: new Date().toISOString(),
       owner_id: userId,
     };
 
-    const { data, error } = await supabase.from('plots').insert(dbPlot).select().single();
-
-    if (!error && data) {
-      // Merge UI properties for local state
-      const enrichedPlot = {
-        ...data,
-        komoditas_nama: kom?.nama,
-        komoditas_icon: kom?.icon,
-        status: 'ontrack',
-        status_text: 'Plot baru dibuat',
-        priority_score: 30,
-        last_watered: 'Hari ini',
-        last_fertilized: 'Belum dilakukan',
-      };
-      setPlots(prev => [enrichedPlot, ...prev]);
-      return enrichedPlot;
-    } else {
-      console.error('Error inserting plot:', error);
-      const tempPlot = {
-        ...dbPlot,
-        id: `temp-${Date.now()}`,
-        komoditas_nama: kom?.nama,
-        komoditas_icon: kom?.icon,
-        status: 'ontrack',
-        status_text: 'Gagal sinkron, mode lokal',
-        priority_score: 30,
-        last_watered: 'Hari ini',
-        last_fertilized: 'Belum dilakukan',
-      };
-      setPlots(prev => [tempPlot, ...prev]);
-      return tempPlot;
+    if (supabase) {
+      const { data, error } = await supabase.from('plots').insert(dbPlot).select('*, komoditas(*)').single();
+      if (!error && data) {
+        const enrichedPlot = {
+          ...data,
+          komoditas_nama: data.komoditas?.nama || kom?.nama || 'Tanaman',
+          komoditas_icon: data.komoditas?.icon || kom?.icon || '🌱',
+          growth_progress: data.growth_progress ?? 15,
+          status: data.status || 'ontrack',
+          priority_score: data.priority_score ?? 30,
+          last_watered: data.last_watered || 'Hari ini',
+          last_fertilized: data.last_fertilized || 'Belum dilakukan',
+        };
+        setPlots(prev => [enrichedPlot, ...prev]);
+        return enrichedPlot;
+      }
     }
+
+    // Fallback if offline
+    const tempPlot = {
+      ...dbPlot,
+      id: `temp-${Date.now()}`,
+      komoditas_nama: kom?.nama || 'Tanaman',
+      komoditas_icon: kom?.icon || '🌱',
+    };
+    setPlots(prev => [tempPlot, ...prev]);
+    return tempPlot;
   }, [komoditasList]);
 
   const logActivity = useCallback(async (activityData) => {
     const targetPlot = plots.find(p => p.id === activityData.plot_id);
     if (!targetPlot) return;
     
-    if (!supabase) return;
-    
-    const { data: { session } } = await supabase.auth.getSession();
-    const userId = session?.user?.id;
+    const now = new Date();
+    const timeStr = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
 
-    const dbActivity = {
-      plot_id: targetPlot.id,
-      activity_type: activityData.activity_type,
-      description: activityData.notes || '',
-      created_by: userId
-    };
+    let userId = null;
+    if (supabase) {
+      const { data: { session } } = await supabase.auth.getSession();
+      userId = session?.user?.id || null;
+      
+      const { data, error } = await supabase.from('plot_activities').insert({
+        plot_id: targetPlot.id,
+        activity_type: activityData.activity_type,
+        description: activityData.notes || '',
+        created_by: userId
+      }).select().single();
 
-    const { data, error } = await supabase.from('plot_activities').insert(dbActivity).select().single();
-
-    if (!error && data) {
+      if (!error && data) {
+        const newActivity = {
+          id: data.id,
+          plot_id: targetPlot.id,
+          plot_name: targetPlot.plot_name,
+          activity_type: data.activity_type,
+          title: activityData.title || `Aktivitas ${data.activity_type}`,
+          notes: data.description || '-',
+          date: `Hari ini, ${timeStr} WIB`,
+          timestamp: data.created_at,
+        };
+        setActivities(prev => [newActivity, ...prev]);
+      }
+    } else {
       const newActivity = {
-        id: data.id,
+        id: `hist-${Date.now()}`,
         plot_id: targetPlot.id,
         plot_name: targetPlot.plot_name,
-        activity_type: data.activity_type,
-        title: activityData.title || `Aktivitas ${data.activity_type}`,
-        notes: data.description || '-',
-        date: new Date(data.created_at).toLocaleDateString('id-ID', {day:'numeric', month:'short', hour:'2-digit', minute:'2-digit'}) + ' WIB',
-        timestamp: data.created_at,
+        activity_type: activityData.activity_type,
+        title: activityData.title || `Aktivitas ${activityData.activity_type}`,
+        notes: activityData.notes || '-',
+        date: `Hari ini, ${timeStr} WIB`,
+        timestamp: now.toISOString(),
       };
-
       setActivities(prev => [newActivity, ...prev]);
-      fireIncrementStreak();
+    }
 
-      setActions(prev => prev.map(a => {
-        if (a.plot_id === targetPlot.id && a.activity_type === activityData.activity_type && a.status !== 'completed') {
-          return { ...a, status: 'completed' };
-        }
-        return a;
-      }));
+    fireIncrementStreak();
 
-      setPlots(prev => prev.map(p => {
-        if (p.id === targetPlot.id) {
-          return {
-            ...p,
-            last_watered: activityData.activity_type === 'Watering' ? 'Baru saja (Hari ini)' : p.last_watered,
-            last_fertilized: activityData.activity_type === 'Fertilizing' ? 'Baru saja (Hari ini)' : p.last_fertilized,
-            status: 'ontrack',
-            status_text: `${activityData.activity_type} selesai tercatat`,
-            priority_score: Math.max(10, p.priority_score - 30),
-            updated_at: new Date().toISOString(),
-          };
-        }
-        return p;
-      }));
+    setActions(prev => prev.map(a => {
+      if (a.plot_id === targetPlot.id && a.activity_type === activityData.activity_type && a.status !== 'completed') {
+        return { ...a, status: 'completed' };
+      }
+      return a;
+    }));
+
+    if (supabase) {
+      supabase.from('actions')
+        .update({ status: 'completed' })
+        .eq('plot_id', targetPlot.id)
+        .eq('activity_type', activityData.activity_type)
+        .neq('status', 'completed')
+        .then(({ error }) => {
+          if (error) console.warn('[logActivity] Supabase update actions error:', error);
+        });
+    }
+
+    const updatedLastWatered = activityData.activity_type === 'Watering' ? 'Baru saja (Hari ini)' : targetPlot.last_watered;
+    const updatedLastFertilized = activityData.activity_type === 'Fertilizing' ? 'Baru saja (Hari ini)' : targetPlot.last_fertilized;
+    const updatedPriorityScore = Math.max(10, targetPlot.priority_score - 30);
+    const updatedAt = now.toISOString();
+
+    setPlots(prev => prev.map(p => {
+      if (p.id === targetPlot.id) {
+        return {
+          ...p,
+          last_watered: updatedLastWatered,
+          last_fertilized: updatedLastFertilized,
+          status: 'ontrack',
+          status_text: `${activityData.activity_type} selesai tercatat`,
+          priority_score: updatedPriorityScore,
+          updated_at: updatedAt,
+        };
+      }
+      return p;
+    }));
+
+    if (supabase) {
+      supabase.from('plots').update({
+        last_watered: updatedLastWatered,
+        last_fertilized: updatedLastFertilized,
+        status: 'ontrack',
+        status_text: `${activityData.activity_type} selesai tercatat`,
+        priority_score: updatedPriorityScore,
+        updated_at: updatedAt,
+      }).eq('id', targetPlot.id).then(({ error }) => {
+        if (error) console.warn('[logActivity] Supabase update plot error:', error);
+      });
     }
   }, [plots]);
 
-  const reportIssue = useCallback((issueData) => {
+  const reportIssue = useCallback(async (issueData) => {
     const targetPlot = plots.find(p => p.id === issueData.plot_id);
     if (!targetPlot) return;
 
     const now = new Date();
     const timeStr = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
-
     const isUrgent = issueData.severity === 'High';
 
-    const newActivity = {
-      id: `hist-${Date.now()}`,
-      plot_id: targetPlot.id,
-      plot_name: targetPlot.plot_name,
-      komoditas_icon: 'alert',
-      activity_type: 'Issue Reported',
-      title: `Laporan Masalah: ${issueData.title}`,
-      notes: `Tingkat Keparahan: ${issueData.severity}. ${issueData.notes || ''}`,
-      date: `Hari ini, ${timeStr} WIB`,
-      timestamp: now.toISOString(),
-    };
+    let userId = null;
+    if (supabase) {
+      const { data: { session } } = await supabase.auth.getSession();
+      userId = session?.user?.id || null;
+      
+      const { data } = await supabase.from('plot_activities').insert({
+        plot_id: targetPlot.id,
+        activity_type: 'Issue Reported',
+        description: `Tingkat Keparahan: ${issueData.severity}. ${issueData.notes || ''}`,
+        created_by: userId
+      }).select().single();
 
-    setActivities(prev => [newActivity, ...prev]);
+      if (data) {
+        setActivities(prev => [{
+          id: data.id,
+          plot_id: targetPlot.id,
+          plot_name: targetPlot.plot_name,
+          activity_type: 'Issue Reported',
+          title: `Laporan Masalah: ${issueData.title}`,
+          notes: `Tingkat Keparahan: ${issueData.severity}. ${issueData.notes || ''}`,
+          date: `Hari ini, ${timeStr} WIB`,
+          timestamp: data.created_at,
+        }, ...prev]);
+      }
+    } else {
+      setActivities(prev => [{
+        id: `hist-${Date.now()}`,
+        plot_id: targetPlot.id,
+        plot_name: targetPlot.plot_name,
+        activity_type: 'Issue Reported',
+        title: `Laporan Masalah: ${issueData.title}`,
+        notes: `Tingkat Keparahan: ${issueData.severity}. ${issueData.notes || ''}`,
+        date: `Hari ini, ${timeStr} WIB`,
+        timestamp: now.toISOString(),
+      }, ...prev]);
+    }
 
     if (isUrgent) {
       const newAction = {
-        id: `act-${Date.now()}`,
         plot_id: targetPlot.id,
         plot_name: targetPlot.plot_name,
         komoditas_icon: targetPlot.komoditas_icon,
@@ -308,33 +448,58 @@ export default function useGoraData() {
         priority: 'high',
         activity_type: 'Issue Handling',
       };
-      setActions(prev => [newAction, ...prev]);
+      if (supabase) {
+        const { data: actData } = await supabase.from('actions').insert(newAction).select().single();
+        if (actData) setActions(prev => [actData, ...prev]);
+      } else {
+        setActions(prev => [{ ...newAction, id: `act-${Date.now()}` }, ...prev]);
+      }
     }
+
+    const updatedStatus = isUrgent ? 'urgent' : 'attention';
+    const updatedStatusText = `Masalah dilaporkan: ${issueData.title}`;
+    const updatedPriorityScore = isUrgent ? 98 : 75;
+    const updatedAt = now.toISOString();
 
     setPlots(prev => prev.map(p => {
       if (p.id === targetPlot.id) {
         return {
           ...p,
-          status: isUrgent ? 'urgent' : 'attention',
-          status_text: `Masalah dilaporkan: ${issueData.title}`,
-          priority_score: isUrgent ? 98 : 75,
-          updated_at: now.toISOString(),
+          status: updatedStatus,
+          status_text: updatedStatusText,
+          priority_score: updatedPriorityScore,
+          updated_at: updatedAt,
         };
       }
       return p;
     }));
+
+    if (supabase) {
+      supabase.from('plots').update({
+        status: updatedStatus,
+        status_text: updatedStatusText,
+        priority_score: updatedPriorityScore,
+        updated_at: updatedAt,
+      }).eq('id', targetPlot.id).then(({ error }) => {
+        if (error) console.warn('[reportIssue] Supabase update plot error:', error);
+      });
+    }
   }, [plots]);
 
-  // Reset all demo data back to the initial seed state.
-  // Use this before a live demo to clear out any leftover test data.
-  const resetDemoData = useCallback(() => {
+  const resetDemoData = useCallback(async () => {
     localStorage.clear();
-    localStorage.setItem('gora_plots', JSON.stringify(INITIAL_PLOTS));
-    localStorage.setItem('gora_actions', JSON.stringify(INITIAL_ACTIONS));
-    localStorage.setItem('gora_activities', JSON.stringify(INITIAL_ACTIVITIES));
     setPlots([...INITIAL_PLOTS]);
     setActions([...INITIAL_ACTIONS]);
     setActivities([...INITIAL_ACTIVITIES]);
+
+    if (supabase) {
+      try {
+        await supabase.from('actions').delete().neq('id', 'placeholder');
+        await supabase.from('actions').insert(INITIAL_ACTIONS);
+      } catch (err) {
+        console.warn('[resetDemoData] Supabase reset error:', err);
+      }
+    }
   }, []);
 
   return {

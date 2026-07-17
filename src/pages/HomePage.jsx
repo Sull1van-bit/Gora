@@ -2,7 +2,6 @@ import React, { useState, useRef } from 'react';
 import PlotCardMini from '../components/home/PlotCardMini';
 import { RiMapPinLine, RiAddLine, RiWaterFlashLine, RiDropLine, RiCheckboxCircleLine } from 'react-icons/ri';
 import UniversalIcon from '../utils/iconHelper';
-import useUserLocation from '../hooks/useUserLocation';
 import useProfile from '../hooks/useProfile';
 
 export default function HomePage({
@@ -15,10 +14,17 @@ export default function HomePage({
   onSelectPlot,
   onNavigateTab,
   onOpenAddPlot,
-  weatherLoading
+  weatherLoading,
+  provinsi,
+  kecamatan,
+  locLoading
 }) {
-  const { provinsi, kecamatan, loading: locLoading } = useUserLocation();
   const sliderRef = useRef(null);
+  const isDownRef = useRef(false);
+  const startXRef = useRef(0);
+  const scrollLeftRef = useRef(0);
+  const dragDistanceRef = useRef(0);
+  const [isDragging, setIsDragging] = useState(false);
   const [activePlotIndex, setActivePlotIndex] = useState(0);
   const { profile, loading: profileLoading } = useProfile();
 
@@ -31,6 +37,39 @@ export default function HomePage({
     return new Date(b.updated_at) - new Date(a.updated_at);
   });
   const plotsToShow = sortedPlots.slice(0, 5);
+
+  const handleMouseDown = (e) => {
+    if (!sliderRef.current) return;
+    isDownRef.current = true;
+    dragDistanceRef.current = 0;
+    startXRef.current = e.pageX - sliderRef.current.offsetLeft;
+    scrollLeftRef.current = sliderRef.current.scrollLeft;
+    setIsDragging(true);
+  };
+
+  const handleMouseMove = (e) => {
+    if (!isDownRef.current || !sliderRef.current) return;
+    e.preventDefault();
+    const x = e.pageX - sliderRef.current.offsetLeft;
+    const walk = (x - startXRef.current) * 1.5;
+    dragDistanceRef.current = Math.abs(walk);
+    sliderRef.current.scrollLeft = scrollLeftRef.current - walk;
+  };
+
+  const handleMouseUpOrLeave = () => {
+    isDownRef.current = false;
+    setIsDragging(false);
+  };
+
+  const handlePlotSelectWithDragCheck = (id) => {
+    if (dragDistanceRef.current > 6) return;
+    onSelectPlot(id);
+  };
+
+  const handleAddPlotWithDragCheck = () => {
+    if (dragDistanceRef.current > 6) return;
+    onOpenAddPlot();
+  };
 
   const handleSliderScroll = () => {
     if (!sliderRef.current) return;
@@ -183,18 +222,24 @@ export default function HomePage({
         <div
           ref={sliderRef}
           onScroll={handleSliderScroll}
+          onMouseDown={handleMouseDown}
+          onMouseMove={handleMouseMove}
+          onMouseUp={handleMouseUpOrLeave}
+          onMouseLeave={handleMouseUpOrLeave}
           style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-          className="flex gap-3 overflow-x-auto pb-2 scrollbar-none snap-x snap-mandatory [&::-webkit-scrollbar]:hidden"
+          className={`flex gap-3 overflow-x-auto pb-2 scrollbar-none snap-x snap-mandatory [&::-webkit-scrollbar]:hidden select-none ${
+            isDragging ? 'cursor-grabbing !snap-none' : 'cursor-grab'
+          }`}
         >
           {plotsToShow.map((plot) => (
             <div key={plot.id} className="snap-start shrink-0">
-              <PlotCardMini plot={plot} onSelect={onSelectPlot} />
+              <PlotCardMini plot={plot} onSelect={handlePlotSelectWithDragCheck} />
             </div>
           ))}
 
           {/* Tambah Tanaman Card (Figma 56:186 cardTambah) */}
           <div
-            onClick={onOpenAddPlot}
+            onClick={handleAddPlotWithDragCheck}
             className="w-[145px] sm:w-[155px] h-[200px] bg-[#fbf9f3] rounded-[20px] shadow-[0px_2px_8px_rgba(0,0,0,0.06)] border border-slate-100/80 p-1.5 shrink-0 cursor-pointer group snap-start active:scale-[0.98] transition-all select-none"
           >
             <div className="border border-[#8f8e94]/50 border-dashed rounded-[16px] h-full flex flex-col items-center justify-center gap-1 group-hover:bg-white/60 transition-colors p-3">

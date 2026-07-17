@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import PlotCardFull from '../components/plots/PlotCardFull';
-import AddPlotModal from '../components/plots/AddPlotModal';
 import LogActivityModal from '../components/plots/LogActivityModal';
 import ReportIssueModal from '../components/plots/ReportIssueModal';
 import { RiPlantFill } from 'react-icons/ri';
@@ -9,6 +8,7 @@ export default function PlotsPage({
   plots, 
   komoditasList, 
   onAddPlot, 
+  onOpenAddPlot,
   onLogActivity, 
   onReportIssue, 
   onSelectPlot 
@@ -16,7 +16,6 @@ export default function PlotsPage({
   const [searchQuery, setSearchQuery] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
 
-  const [isAddOpen, setIsAddOpen] = useState(false);
   const [activeLogPlot, setActiveLogPlot] = useState(null);
   const [activeReportPlot, setActiveReportPlot] = useState(null);
 
@@ -36,14 +35,11 @@ export default function PlotsPage({
 
   return (
     <div className="space-y-4 pt-4 pb-24 px-4 sm:px-5 animate-fade-in text-[#3c3b3b]">
-      
       <h1 className="text-center font-['Montserrat_Alternates',sans-serif] font-bold text-[#28502d] text-[20px] sm:text-[22px] tracking-tight">
         Lahan
       </h1>
 
-      
       <div className="flex items-center justify-between gap-3 mt-4 mb-3">
-        
         <div className="flex-1 bg-[#c6d5a2] h-[40px] rounded-[30px] pl-5 pr-10 flex items-center relative shadow-2xs">
           <input
             type="text"
@@ -67,11 +63,11 @@ export default function PlotsPage({
           />
         </div>
 
-        
         <button
           onClick={() => {
-            setIsAddOpen(true);
-            onAddPlot?.();
+            if (onOpenAddPlot) {
+              onOpenAddPlot();
+            }
           }}
           type="button"
           className="size-[40px] bg-[#c6d5a2] hover:bg-[#b5c590] active:scale-95 rounded-[30px] flex items-center justify-center shrink-0 shadow-2xs transition-all cursor-pointer"
@@ -81,7 +77,6 @@ export default function PlotsPage({
         </button>
       </div>
 
-      
       <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
         <button
           onClick={() => setFilterStatus('all')}
@@ -102,7 +97,7 @@ export default function PlotsPage({
             filterStatus === 'urgent' ? 'ring-2 ring-[#ce4949]/50 scale-105' : 'opacity-90 hover:opacity-100'
           }`}
         >
-          Kritis
+          Mendesak
         </button>
 
         <button
@@ -112,7 +107,7 @@ export default function PlotsPage({
             filterStatus === 'attention' ? 'ring-2 ring-[#fcbe3c]/50 scale-105' : 'opacity-90 hover:opacity-100'
           }`}
         >
-          Perhatian
+          Perlu Perhatian
         </button>
 
         <button
@@ -122,11 +117,10 @@ export default function PlotsPage({
             filterStatus === 'ontrack' ? 'ring-2 ring-[#578a3e]/50 scale-105' : 'opacity-90 hover:opacity-100'
           }`}
         >
-          Normal
+          Sehat
         </button>
       </div>
 
-      
       {filteredPlots.length > 0 ? (
         <div className="space-y-5 pt-1">
           {filteredPlots.map((plot) => (
@@ -157,17 +151,6 @@ export default function PlotsPage({
           </button>
         </div>
       )}
-
-      
-      <AddPlotModal
-        isOpen={isAddOpen}
-        onClose={() => setIsAddOpen(false)}
-        onSave={(newPlot) => {
-          onAddPlot?.(newPlot);
-          setIsAddOpen(false);
-        }}
-        komoditasList={komoditasList}
-      />
 
       {activeLogPlot && (
         <LogActivityModal

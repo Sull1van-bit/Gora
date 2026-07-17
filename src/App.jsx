@@ -153,6 +153,7 @@ export default function App() {
             plots={plots}
             komoditasList={komoditasList}
             onAddPlot={addPlot}
+            onOpenAddPlot={() => setIsAddPlotModalOpen(true)}
             onLogActivity={logActivity}
             onReportIssue={reportIssue}
             onSelectPlot={(id) => navigateTo('plot-detail', id)}
