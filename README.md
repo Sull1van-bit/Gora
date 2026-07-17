@@ -55,7 +55,10 @@ To meet the hackathon timeline, we developed a functional MVP using a rule-based
 
 
 # Quick Start Guide 
-blalalalalalalala 
+npm run dev
+
+for mobile apk 
+android -> app -> build -> outputs -> apk -> debug -> app-debug.apk
 
 
 # Challenges We Ran Into 
