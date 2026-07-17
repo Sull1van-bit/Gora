@@ -15,6 +15,11 @@ export default defineConfig({
         target: 'https://jakpost.vercel.app',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api\/jakpost/, '/api')
+      },
+      '/api/antara-news': {
+        target: 'https://berita-indo-api-next.vercel.app',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/antara-news/, '/api/antara-news')
       }
     }
   }
