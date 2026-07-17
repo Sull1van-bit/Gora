@@ -48,7 +48,10 @@ export default function RegisterPage({ onBackToLogin, onRegisterSuccess }) {
       const { error } = await supabase.auth.signInWithOAuth({ 
         provider,
         options: {
-          redirectTo: 'com.garuda.gora://login-callback'
+          redirectTo: 'com.garuda.gora://login-callback',
+          queryParams: {
+            prompt: 'select_account'
+          }
         }
       });
       if (error) throw error;

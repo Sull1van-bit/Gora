@@ -29,9 +29,16 @@ export default function App() {
     const handleDeepLink = async (event) => {
       if (event.url.includes('login-callback')) {
         const url = new URL(event.url);
-        if (url.hash || url.search) {
-          window.history.replaceState({}, document.title, url.pathname + url.search + url.hash);
-          await supabase.auth.getSession();
+        
+        // Cek PKCE Flow (?code=)
+        const code = url.searchParams.get('code');
+        if (code) {
+          await supabase.auth.exchangeCodeForSession(code);
+        } else {
+          // Fallback (Implicit Flow) jika masih menggunakan hash
+          if (url.hash || url.search) {
+            window.location.replace(url.pathname + url.search + url.hash);
+          }
         }
       }
     };
