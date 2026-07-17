@@ -1,30 +1,40 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import useUserLocation from '../hooks/useUserLocation';
 import useProfile from '../hooks/useProfile';
 import useStreak from '../hooks/useStreak';
 import ProfileHeader from '../components/profile/ProfileHeader';
-import ProfileStreak from '../components/profile/ProfileStreak';
-import ProfileLocation from '../components/profile/ProfileLocation';
-import ProfilePreferences from '../components/profile/ProfilePreferences';
-import ProfileAbout from '../components/profile/ProfileAbout';
+import ProfileStatsRow from '../components/profile/ProfileStatsRow';
+import ProfileWeeklyAndRecords from '../components/profile/ProfileWeeklyAndRecords';
+import ProfileBadges from '../components/profile/ProfileBadges';
+import ProfileMenu from '../components/profile/ProfileMenu';
 
-export default function ProfilePage({ plots, onSignOut, onResetDemoData }) {
-  const { kecamatan, kota, provinsi, refetch: refetchLocation } = useUserLocation();
+export default function ProfilePage({ 
+  plots = [], 
+  activities = [],
+  actions = [],
+  onSignOut, 
+  onResetDemoData,
+  provinsi: propProvinsi,
+  kecamatan: propKecamatan,
+  refetchLocation
+}) {
+  const { kecamatan: locKecamatan, kota: locKota, provinsi: locProvinsi, refetch: locRefetch } = useUserLocation();
   const { profile, loading: profileLoading, updateProfile } = useProfile();
-  const { streakCount, longestStreak, lastActivityDate, isActiveToday, streakStatus, syncFromProfile } = useStreak(profile);
+  const { streakCount, longestStreak, syncFromProfile } = useStreak(profile);
 
-  const [notifEnabled, setNotifEnabled] = useState(true);
-  const [offlineSync, setOfflineSync]   = useState(true);
-  const [language, setLanguage]         = useState('id');
-  
+  const kecamatan = propKecamatan || locKecamatan;
+  const provinsi = propProvinsi || locProvinsi;
+  const kota = locKota;
+
   useEffect(() => {
     if (profile) {
       syncFromProfile(profile);
     }
-  }, [profile]);
+  }, [profile, syncFromProfile]);
 
   return (
-    <div className="space-y-4 pt-4 pb-24 px-4 sm:px-5 animate-fade-in text-[#3c3b3b]">
+    <div className="pt-2 pb-24 px-4 sm:px-5 animate-fade-in text-[#3c3b3b] font-['Manrope',sans-serif] selection:bg-emerald-500 selection:text-white">
+      {/* 1. Header Section: Avatar, Name, Location, Member Since, Edit Profil, Streak & Level */}
       <ProfileHeader 
         profile={profile} 
         profileLoading={profileLoading} 
@@ -36,31 +46,27 @@ export default function ProfilePage({ plots, onSignOut, onResetDemoData }) {
         updateProfile={updateProfile} 
       />
 
-      <ProfileStreak 
-        streakCount={streakCount} 
-        streakStatus={streakStatus} 
+      {/* 2. 4-Column Stats Row: Log Bulan Ini, Total Lahan, Tanaman Aktif, Selesai Panen */}
+      <ProfileStatsRow 
+        plots={plots} 
+        activities={activities} 
+      />
+
+      {/* 3. Two Side-by-Side Cards: Statistik Minggu Ini & Rekor */}
+      <ProfileWeeklyAndRecords 
         longestStreak={longestStreak} 
-        isActiveToday={isActiveToday} 
-        lastActivityDate={lastActivityDate} 
+        activities={activities} 
+        actions={actions} 
       />
 
-      <ProfileLocation 
-        kecamatan={kecamatan} 
-        kota={kota} 
-        provinsi={provinsi} 
-        refetchLocation={refetchLocation} 
-      />
+      {/* 4. Pencapaian Section: 6 Badges + Progress Bar */}
+      <ProfileBadges />
 
-      <ProfilePreferences 
-        notifEnabled={notifEnabled} 
-        setNotifEnabled={setNotifEnabled} 
-        offlineSync={offlineSync} 
-        setOfflineSync={setOfflineSync} 
-        language={language} 
-        setLanguage={setLanguage} 
+      {/* 5. Menu Section: Bantuan & Dukungan, Tentang Aplikasi, Keluar */}
+      <ProfileMenu 
+        onSignOut={onSignOut} 
+        onResetDemoData={onResetDemoData} 
       />
-
-      <ProfileAbout onSignOut={onSignOut} onResetDemoData={onResetDemoData} />
     </div>
   );
 }

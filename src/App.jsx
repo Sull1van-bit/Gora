@@ -216,6 +216,8 @@ export default function App() {
         {activeTab === 'profile' && (
           <ProfilePage 
             plots={plots} 
+            activities={activities}
+            actions={actions}
             onSignOut={signOut} 
             onResetDemoData={resetDemoData}
             provinsi={provinsi}
