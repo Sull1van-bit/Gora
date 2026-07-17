@@ -22,29 +22,29 @@ export default function InsightsPage({ weather, newsList, newsLoading, initialTa
   ];
 
   return (
-    <div className="space-y-4 animate-fade-in">
+    <div className="space-y-4 pt-4 pb-24 px-4 sm:px-5 animate-fade-in text-[#3c3b3b]">
       
-      <div>
-        <h1 className="text-xl font-extrabold text-slate-900 font-['Montserrat_Alternates',sans-serif]">
-          Wawasan Pertanian (Insights)
+      <div className="text-center">
+        <h1 className="font-['Montserrat_Alternates',sans-serif] font-bold text-[#28502d] text-[20px] sm:text-[22px] tracking-tight">
+          Wawasan Pertanian
         </h1>
-        <p className="text-xs text-slate-500 font-medium">
+        <p className="text-xs text-[#6f6e72] font-medium mt-1">
           Prakiraan cuaca, fluktuasi harga pasar, dan edukasi agronomi
         </p>
       </div>
 
       
-      <div className="flex bg-slate-200/70 p-1 rounded-2xl">
+      <div className="flex bg-[#c6d5a2]/35 p-1 rounded-[20px] border border-[#c6d5a2]/50 shadow-2xs mt-4">
         {tabs.map((tab) => {
           const isActive = activeSubTab === tab.id;
           return (
             <button
               key={tab.id}
               onClick={() => setActiveSubTab(tab.id)}
-              className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all ${
+              className={`flex-1 py-2 rounded-[16px] text-[11px] sm:text-xs font-['Montserrat_Alternates',sans-serif] font-bold transition-all ${
                 isActive
-                  ? 'bg-white text-slate-900 shadow-sm scale-[1.01]'
-                  : 'text-slate-600 hover:text-slate-800'
+                  ? 'bg-[#28502d] text-white shadow-2xs scale-[1.02]'
+                  : 'text-[#3c3b3b] hover:text-[#28502d]'
               }`}
             >
               {tab.label}

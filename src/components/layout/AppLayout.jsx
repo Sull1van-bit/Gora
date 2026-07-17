@@ -15,10 +15,10 @@ export default function AppLayout({
   showBack = false,
   onBack
 }) {
-  const isCustomHeader = activeTab === 'home' || currentRoute === 'home' || currentRoute === 'plot-detail' || activeTab === 'plot-detail' || activeTab === 'plots' || currentRoute === 'plots';
+  const isCustomHeader = activeTab === 'home' || currentRoute === 'home' || currentRoute === 'plot-detail' || activeTab === 'plot-detail' || activeTab === 'plots' || currentRoute === 'plots' || activeTab === 'insights' || currentRoute === 'insights' || activeTab === 'profile' || currentRoute === 'profile';
 
   return (
-    <div className={`min-h-screen ${isCustomHeader ? 'bg-[#f5f9ed]' : 'bg-slate-50'} text-slate-800 font-['Manrope',sans-serif] flex flex-col justify-between selection:bg-emerald-500 selection:text-white`}>
+    <div className="min-h-screen bg-[#f5f9ed] text-[#3c3b3b] font-['Manrope',sans-serif] flex flex-col justify-between selection:bg-emerald-500 selection:text-white">
       
       {!isCustomHeader && (
         <header className="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-slate-100 shadow-xs transition-all" style={{ paddingTop: 'var(--sat, 0px)' }}>
@@ -68,7 +68,7 @@ export default function AppLayout({
       )}
 
       
-      <main className={`flex-1 max-w-md w-full mx-auto pb-28 ${isCustomHeader ? 'pt-0 px-0' : 'pt-2 px-4'} transition-all`}>
+      <main className="flex-1 max-w-md w-full mx-auto pb-28 pt-0 px-0 transition-all">
         {children}
       </main>
 

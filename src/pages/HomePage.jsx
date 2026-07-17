@@ -36,7 +36,11 @@ export default function HomePage({
     if (!sliderRef.current) return;
     const { scrollLeft } = sliderRef.current;
     const index = Math.round(scrollLeft / 167);
-    setActivePlotIndex(Math.min(Math.max(index, 0), plotsToShow.length - 1));
+    if (index >= plotsToShow.length) {
+      setActivePlotIndex(-1);
+    } else {
+      setActivePlotIndex(Math.max(index, 0));
+    }
   };
 
   const scrollToPlot = (idx) => {
@@ -118,10 +122,10 @@ export default function HomePage({
         {/* 3-Column Weather Stats Grid */}
         <div
           onClick={() => onNavigateTab('insights', 'weather')}
-          className="flex items-center justify-between text-center divide-x divide-slate-200/80 cursor-pointer group"
+          className="flex items-center justify-between text-center divide-x divide-slate-200/80 cursor-pointer"
         >
           {/* Column 1: Temp */}
-          <div className="flex-1 flex flex-col items-center justify-center px-1">
+          <div className="flex-1 flex flex-col items-center justify-center px-1 group">
             <div className="flex items-center justify-center gap-1.5 mb-0.5">
               <img src="/assets/figma/weather_sun.svg" className="w-6 h-6 group-hover:scale-110 transition-transform" alt="Cuaca" />
               <span className="font-['Manrope',sans-serif] font-bold text-[20px] text-[#28502d]">
@@ -134,7 +138,7 @@ export default function HomePage({
           </div>
 
           {/* Column 2: Humidity */}
-          <div className="flex-1 flex flex-col items-center justify-center px-1">
+          <div className="flex-1 flex flex-col items-center justify-center px-1 group">
             <div className="flex items-center justify-center gap-1.5 mb-0.5">
               <img src="/assets/figma/water_sharp.svg" className="w-5 h-5 group-hover:scale-110 transition-transform" alt="Kelembapan" />
               <span className="font-['Manrope',sans-serif] font-bold text-[18px] text-[#28502d]">
@@ -147,7 +151,7 @@ export default function HomePage({
           </div>
 
           {/* Column 3: Rain Chance */}
-          <div className="flex-1 flex flex-col items-center justify-center px-1">
+          <div className="flex-1 flex flex-col items-center justify-center px-1 group">
             <div className="flex items-center justify-center gap-1.5 mb-0.5">
               <img src="/assets/figma/cloud_rain.svg" className="w-5 h-5 group-hover:scale-110 transition-transform" alt="Hujan" />
               <span className="font-['Manrope',sans-serif] font-bold text-[18px] text-[#28502d]">

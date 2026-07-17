@@ -24,7 +24,7 @@ export default function ProfilePage({ plots, onSignOut, onResetDemoData }) {
   }, [profile]);
 
   return (
-    <div className="space-y-4 animate-fade-in pb-6">
+    <div className="space-y-4 pt-4 pb-24 px-4 sm:px-5 animate-fade-in text-[#3c3b3b]">
       <ProfileHeader 
         profile={profile} 
         profileLoading={profileLoading} 
