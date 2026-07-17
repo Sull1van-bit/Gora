@@ -6,6 +6,10 @@ import PlotDetailPage from './pages/PlotDetailPage';
 import InsightsPage from './pages/InsightsPage';
 import ProfilePage from './pages/ProfilePage';
 import LoginPage from './pages/LoginPage';
+import RegisterPage from './pages/RegisterPage';
+import VerifyOtpPage from './pages/VerifyOtpPage';
+import WelcomePage from './pages/WelcomePage';
+import SplashPage from './pages/SplashPage';
 import AddPlotModal from './components/plots/AddPlotModal';
 import useGoraData from './hooks/useGoraData';
 import useAuth from './hooks/useAuth';
@@ -23,6 +27,7 @@ export default function App() {
     activities,
     komoditasList,
     completeAction,
+    addActions,
     addPlot,
     logActivity,
     reportIssue,
@@ -38,6 +43,16 @@ export default function App() {
   const [selectedPlotId, setSelectedPlotId] = useState(null);
   const [insightsTab, setInsightsTab] = useState('weather');
   const [isAddPlotModalOpen, setIsAddPlotModalOpen] = useState(false);
+  const [authView, setAuthView] = useState('welcome'); // welcome | login | register | verify
+  const [registeredEmail, setRegisteredEmail] = useState('');
+  const [showSplash, setShowSplash] = useState(true);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setShowSplash(false);
+    }, 2000);
+    return () => clearTimeout(timer);
+  }, []);
 
   useEffect(() => {
     const handleHashChange = () => {
@@ -101,16 +116,48 @@ export default function App() {
     }
   };
 
-  if (authLoading) {
-    return (
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', fontFamily: 'sans-serif', color: '#555', gap: '8px' }}>
-        <RiLoader4Line className="animate-spin text-xl" /> <p>Memuat...</p>
-      </div>
-    );
+  if (showSplash || authLoading) {
+    return <SplashPage />;
   }
 
   if (!session) {
-    return <LoginPage onLoginSuccess={(s) => {  }} />;
+    if (authView === 'welcome') {
+      return (
+        <WelcomePage 
+          onNavigateLogin={() => setAuthView('login')}
+          onNavigateRegister={() => setAuthView('register')}
+        />
+      );
+    }
+    if (authView === 'register') {
+      return (
+        <RegisterPage 
+          onBackToLogin={() => setAuthView('login')} 
+          onRegisterSuccess={(email) => {
+            setRegisteredEmail(email);
+            setAuthView('verify');
+          }} 
+        />
+      );
+    }
+    if (authView === 'verify') {
+      return (
+        <VerifyOtpPage 
+          email={registeredEmail}
+          onBack={() => setAuthView('login')}
+          onVerifySuccess={(s) => {
+            setAuthView('login'); // Will trigger re-render and session will be valid
+          }}
+        />
+      );
+    }
+    return (
+      <LoginPage 
+        onLoginSuccess={(s) => {}} 
+        onNavigateRegister={() => setAuthView('register')} 
+        onBack={() => setAuthView('welcome')}
+      />
+    );
   }
 
   return (
@@ -139,6 +186,7 @@ export default function App() {
             komoditasList={komoditasList}
             newsList={newsList}
             onCompleteAction={completeAction}
+            onAddActions={addActions}
             onSelectPlot={(id) => navigateTo('plot-detail', id)}
             onNavigateTab={navigateTo}
             onOpenAddPlot={() => setIsAddPlotModalOpen(true)}

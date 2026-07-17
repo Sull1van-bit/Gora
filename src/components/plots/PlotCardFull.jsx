@@ -23,27 +23,42 @@ export default function PlotCardFull({ plot, onSelect }) {
 
   const statusBadge = getStatusBadge(plot.status);
   
-  let progressVal = plot.growth_progress || 0;
-  let daysToHarvest = plot.days_to_harvest || 0;
+  const defaultStages = [
+    {id: "seed", name: "Semai", days: 14},
+    {id: "sprout", name: "Tunas", days: 14},
+    {id: "vegetative", name: "Vegetatif", days: 30},
+    {id: "flowering", name: "Berbunga", days: 15},
+    {id: "harvest", name: "Panen", days: 10}
+  ];
+  
+  const stages = plot.growth_stages || defaultStages;
 
-  if (plot.planting_date && plot.estimated_harvest_date) {
+  let elapsedDays = 0;
+  if (plot.planting_date) {
     const start = new Date(plot.planting_date).getTime();
-    const end = new Date(plot.estimated_harvest_date).getTime();
     const now = new Date().getTime();
+    elapsedDays = Math.max(0, Math.floor((now - start) / (1000 * 60 * 60 * 24)));
+  }
 
-    if (now >= end) {
-      progressVal = 100;
-      daysToHarvest = 0;
-    } else if (now <= start) {
-      progressVal = 0;
-      daysToHarvest = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
-    } else {
-      const totalDays = end - start;
-      const elapsedDays = now - start;
-      progressVal = Math.round((elapsedDays / totalDays) * 100);
-      daysToHarvest = Math.ceil((end - now) / (1000 * 60 * 60 * 24));
+  let currentStageIndex = 0;
+  let accumulatedDays = 0;
+  let daysToNext = 0;
+
+  for (let i = 0; i < stages.length; i++) {
+    accumulatedDays += stages[i].days;
+    if (elapsedDays < accumulatedDays) {
+      currentStageIndex = i;
+      daysToNext = accumulatedDays - elapsedDays;
+      break;
+    }
+    if (i === stages.length - 1) {
+      currentStageIndex = i;
+      daysToNext = 0; 
     }
   }
+
+  const nextStageName = currentStageIndex < stages.length - 1 ? stages[currentStageIndex + 1].name : "Siap Panen";
+
 
   return (
     <div
@@ -91,7 +106,7 @@ export default function PlotCardFull({ plot, onSelect }) {
             <div className="flex items-center gap-1.5 mt-1.5">
               <img src="/assets/figma/plots/calendar_icon.svg" className="w-[11px] h-[11px] shrink-0" alt="" />
               <p className="font-['Montserrat_Alternates',sans-serif] font-medium text-[#8f8e94] text-[10px]">
-                Panen <span className="font-bold">{daysToHarvest} hari lagi</span>
+                Umur: <span className="font-bold">{elapsedDays} Hari</span>
               </p>
             </div>
           </div>
@@ -103,19 +118,25 @@ export default function PlotCardFull({ plot, onSelect }) {
         </div>
 
         
-        <div className="mt-3.5 space-y-1.5">
-          <div className="flex items-center justify-between w-full">
-            <p className="font-['Montserrat_Alternates',sans-serif] font-semibold text-[#3c3b3b] text-[11px]">
-              Progress
+        <div className="mt-3.5 bg-white border border-[#e8e4d9] rounded-xl p-2.5 shadow-sm">
+          <div className="flex items-center justify-between">
+            <p className="font-['Montserrat_Alternates',sans-serif] font-semibold text-[#4c8644] text-[12px]">
+              Fase: {stages[currentStageIndex].name}
             </p>
-            <p className="font-['Manrope',sans-serif] font-semibold text-[#d89710] text-[12px]">
-              {progressVal}%
-            </p>
+            {daysToNext > 0 ? (
+              <p className="font-['Montserrat_Alternates',sans-serif] font-medium text-[#8f8e94] text-[10px]">
+                {daysToNext}h ke {nextStageName}
+              </p>
+            ) : (
+              <p className="font-['Montserrat_Alternates',sans-serif] font-bold text-[#d89710] text-[10px]">
+                Siap Dipanen
+              </p>
+            )}
           </div>
-          <div className="w-full bg-[#d9d9d9] h-[6px] rounded-full overflow-hidden">
+          <div className="w-full bg-[#d9d9d9] h-[4px] rounded-full mt-2 overflow-hidden">
             <div 
-              className="bg-gradient-to-r from-[#d89710] to-[#f0c771] h-full rounded-full transition-all duration-500"
-              style={{ width: `${progressVal}%` }}
+              className="bg-[#4c8644] h-full rounded-full transition-all duration-500"
+              style={{ width: `${(currentStageIndex / (stages.length - 1)) * 100}%` }}
             />
           </div>
         </div>

@@ -160,6 +160,10 @@ export default function useGoraData() {
     }));
   }, [actions]);
 
+  const addActions = useCallback((newActions) => {
+    setActions(prev => [...newActions, ...prev]);
+  }, []);
+
   const addPlot = useCallback(async (newPlotData) => {
     const kom = komoditasList.find(k => k.id === newPlotData.komoditas_id) || komoditasList[0];
     
@@ -346,6 +350,7 @@ export default function useGoraData() {
     weather,
     addPlot,
     completeAction,
+    addActions,
     logActivity,
     reportIssue,
     resetDemoData,

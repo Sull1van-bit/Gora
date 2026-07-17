@@ -51,7 +51,7 @@ export default function ArticleDetailModal({ article, isOpen, onClose }) {
             rel="noopener noreferrer"
             className="mt-4 w-full block text-center bg-emerald-50 text-emerald-700 hover:bg-emerald-100 font-bold py-3 rounded-2xl text-xs active:scale-95 transition-all"
           >
-            Baca Artikel Lengkap di Jakarta Post ↗
+            Selengkapnya↗
           </a>
         )}
 

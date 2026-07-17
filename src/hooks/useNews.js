@@ -10,10 +10,23 @@ export default function useNews() {
       setLoading(true);
       setError(null);
       try {
+        const fetchWithRetry = async (url, retries = 3) => {
+          for (let i = 0; i < retries; i++) {
+            try {
+              const res = await fetch(url);
+              if (res.ok) return res;
+            } catch (e) {
+              if (i === retries - 1) return null;
+              await new Promise(r => setTimeout(r, 1000 * (i + 1)));
+            }
+          }
+          return null;
+        };
+
         const [jakpostRes, antaraRes, antaraEkoRes] = await Promise.all([
-          fetch('/api/jakpost/category/culture/environment').catch(e => null),
-          fetch('/api/antara-news/warta-bumi').catch(e => null),
-          fetch('/api/antara-news/ekonomi').catch(e => null)
+          fetchWithRetry('/api/jakpost/category/culture/environment'),
+          fetchWithRetry('/api/antara-news/warta-bumi'),
+          fetchWithRetry('/api/antara-news/ekonomi')
         ]);
 
         let combinedNews = [];
@@ -25,6 +38,17 @@ export default function useNews() {
               const wordCount = item.headline ? item.headline.split(' ').length : 200;
               const readTime = Math.max(1, Math.ceil(wordCount / 100)) + ' menit';
               
+              let originalLink = item.link;
+              if (originalLink && originalLink.includes('/api/detailpost/')) {
+                try {
+                  const urlObj = new URL(originalLink);
+                  const pathParts = urlObj.pathname.split('/api/detailpost/')[1];
+                  if (pathParts) {
+                    originalLink = `https://www.thejakartapost.com/${pathParts}.html`;
+                  }
+                } catch(e) {}
+              }
+              
               return {
                 id: `jakpost-${index}`,
                 title: item.title,
@@ -34,7 +58,7 @@ export default function useNews() {
                 image: item.image,
                 summary: item.headline,
                 content: item.headline,
-                link: item.link
+                link: originalLink
               };
             });
             combinedNews = [...combinedNews, ...mappedJakpost];

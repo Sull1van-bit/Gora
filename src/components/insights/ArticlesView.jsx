@@ -45,14 +45,7 @@ export default function ArticlesView({ newsList, newsLoading, onSelectArticle })
 
             <div className="flex-1 min-w-0 flex flex-col justify-between">
               <div>
-                <div className="flex items-center justify-between gap-2 mb-1">
-                  <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 shrink-0">
-                    {article.category}
-                  </span>
-                  <span className="text-[10px] text-slate-400 font-semibold shrink-0">
-                    {article.readTime}
-                  </span>
-                </div>
+
 
                 <h3 className="font-bold text-xs sm:text-sm text-slate-900 group-hover:text-emerald-700 transition-colors line-clamp-2 leading-tight">
                   {article.title}
