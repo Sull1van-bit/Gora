@@ -17,7 +17,8 @@ export default function PlotDetailPage({
   onCompleteAction, 
   onLogActivity, 
   onReportIssue, 
-  onBack 
+  onBack,
+  onOpenLogObservation
 }) {
   const [isLogOpen, setIsLogOpen] = useState(false);
   const [isReportOpen, setIsReportOpen] = useState(false);
@@ -57,6 +58,7 @@ export default function PlotDetailPage({
         plot={plot} 
         progressPct={progressPct} 
         setIsLogOpen={setIsLogOpen} 
+        onOpenLogObservation={onOpenLogObservation}
       />
 
       <PlotDetailInfo plot={plot} />

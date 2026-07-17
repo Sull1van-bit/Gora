@@ -9,7 +9,9 @@ export default function LogObservationModal({
   onClose,
   plots = [],
   onSaveObservation,
-  streakCount = 7
+  streakCount = 7,
+  initialPlotId = null,
+  initialStep = 1
 }) {
   const [step, setStep] = useState(1);
   const [selectedPlotId, setSelectedPlotId] = useState(null);
@@ -26,8 +28,12 @@ export default function LogObservationModal({
     // Only reset state when modal transitions from closed to open
     // This prevents useEffect from resetting step back to 1 when onSaveObservation updates plots!
     if (isOpen && !prevOpenRef.current) {
-      setStep(1);
-      setSelectedPlotId(plots.length > 0 ? plots[0].id : null);
+      setStep(initialStep || 1);
+      if (initialPlotId) {
+        setSelectedPlotId(initialPlotId);
+      } else {
+        setSelectedPlotId(plots.length > 0 ? plots[0].id : null);
+      }
       setSelectedActivities([]);
       setCondition(null);
       setNotes('');
@@ -35,7 +41,7 @@ export default function LogObservationModal({
       setStreakDisplay(null);
     }
     prevOpenRef.current = isOpen;
-  }, [isOpen, plots]);
+  }, [isOpen, plots, initialPlotId, initialStep]);
 
   if (!isOpen) return null;
 
