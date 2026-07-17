@@ -2,9 +2,10 @@ import React from 'react';
 import { RiMapPin2Fill, RiSunCloudyFill, RiPlantFill, RiRainyFill } from 'react-icons/ri';
 import UniversalIcon from '../../utils/iconHelper';
 
-export default function WeatherDetailView({ weather }) {
-  const hourlyForecast = weather?.hourlyForecast || [];
-  const weeklyForecast = weather?.weeklyForecast || [];
+export default function WeatherDetailView({ weather, hourlyForecast: propHourly, weeklyForecast: propWeekly, locationLabel }) {
+  const hourlyForecast = (propHourly && propHourly.length > 0) ? propHourly : (weather?.hourlyForecast || []);
+  const weeklyForecast = (propWeekly && propWeekly.length > 0) ? propWeekly : (weather?.weeklyForecast || []);
+  const displayLocation = locationLabel || weather?.locationName || 'Memuat Lokasi...';
 
   return (
     <div className="space-y-4 animate-fade-in">
@@ -15,7 +16,7 @@ export default function WeatherDetailView({ weather }) {
         <div className="flex items-center justify-between mb-3">
           <div>
             <span className="bg-white/20 backdrop-blur-md px-3 py-1 rounded-full text-xs font-bold text-blue-100 flex items-center gap-1">
-              <RiMapPin2Fill /> {weather?.locationName || 'Memuat Lokasi...'}
+              <RiMapPin2Fill /> {displayLocation}
             </span>
             <h2 className="text-xl font-black font-['Montserrat_Alternates',sans-serif] mt-2">
               {weather?.condition || 'Cerah Berawan'}

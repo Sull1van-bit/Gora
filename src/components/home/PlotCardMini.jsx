@@ -3,9 +3,27 @@ import { RiCalendar2Line, RiLeafFill, RiPlantFill, RiSeedlingFill } from 'react-
 import UniversalIcon from '../../utils/iconHelper';
 
 export default function PlotCardMini({ plot, onSelect }) {
-  const progressPct = plot.progress || plot.growth_progress || 60;
-  
-  const daysToHarvest = plot.days_to_harvest || 28;
+  let progressPct = plot.growth_progress || plot.progress || 15;
+  let daysToHarvest = plot.days_to_harvest || 28;
+
+  if (plot.planting_date && plot.estimated_harvest_date) {
+    const start = new Date(plot.planting_date).getTime();
+    const end = new Date(plot.estimated_harvest_date).getTime();
+    const now = new Date().getTime();
+
+    if (now >= end) {
+      progressPct = 100;
+      daysToHarvest = 0;
+    } else if (now <= start) {
+      progressPct = 0;
+      daysToHarvest = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
+    } else {
+      const totalDays = end - start;
+      const elapsedDays = now - start;
+      progressPct = Math.round((elapsedDays / totalDays) * 100);
+      daysToHarvest = Math.ceil((end - now) / (1000 * 60 * 60 * 24));
+    }
+  }
 
   const thumbnail = plot.image_url || (
     plot.komoditas_nama?.toLowerCase().includes('tomat') 
@@ -80,16 +98,18 @@ export default function PlotCardMini({ plot, onSelect }) {
       className="w-[145px] sm:w-[155px] h-[200px] bg-[#fbf9f3] rounded-[20px] shadow-[0px_2px_8px_rgba(0,0,0,0.06)] border border-slate-100/80 overflow-hidden shrink-0 flex flex-col justify-between transition-all duration-200 active:scale-[0.98] hover:shadow-md cursor-pointer group select-none"
     >
       {/* Top Image & Overlapping React Icon Badge */}
-      <div className="h-[80px] w-full relative bg-slate-100 overflow-visible shrink-0">
+      <div className="h-[80px] w-full relative bg-slate-100 overflow-visible shrink-0 select-none">
         <img 
           src={thumbnail} 
           alt={plot.plot_name} 
-          className="w-full h-full object-cover rounded-t-[20px] group-hover:scale-105 transition-transform duration-300"
+          draggable={false}
+          className="w-full h-full object-cover rounded-t-[20px] group-hover:scale-105 transition-transform duration-300 pointer-events-none select-none"
           onError={(e) => { e.target.src = '/assets/figma/image9.png'; }}
         />
         {/* Overlapping circular icon badge like origin/main */}
         <div className="-bottom-3.5 left-2.5 w-7 h-7 rounded-full bg-white shadow-sm flex items-center justify-center text-sm absolute z-10 border border-slate-100 text-emerald-600">
-          {plot.komoditas_nama?.includes('Tomat') ? <RiPlantFill /> :
+          {plot.komoditas_icon ? <span className="text-base leading-none">{plot.komoditas_icon}</span> :
+           plot.komoditas_nama?.includes('Tomat') ? <RiPlantFill /> :
            plot.komoditas_nama?.includes('Cabai') ? <RiLeafFill /> :
            plot.komoditas_nama?.includes('Padi') ? <RiSeedlingFill /> :
            <RiLeafFill />}

@@ -4,7 +4,6 @@ import AIRecommendationCard from '../components/home/AIRecommendationCard';
 import useAIRecommendations from '../hooks/useAIRecommendations';
 import { RiMapPinLine, RiAddLine, RiWaterFlashLine, RiDropLine, RiCheckboxCircleLine } from 'react-icons/ri';
 import UniversalIcon from '../utils/iconHelper';
-import useUserLocation from '../hooks/useUserLocation';
 import useProfile from '../hooks/useProfile';
 
 export default function HomePage({
@@ -18,10 +17,17 @@ export default function HomePage({
   onSelectPlot,
   onNavigateTab,
   onOpenAddPlot,
-  weatherLoading
+  weatherLoading,
+  provinsi,
+  kecamatan,
+  locLoading
 }) {
-  const { provinsi, kecamatan, loading: locLoading } = useUserLocation();
   const sliderRef = useRef(null);
+  const isDownRef = useRef(false);
+  const startXRef = useRef(0);
+  const scrollLeftRef = useRef(0);
+  const dragDistanceRef = useRef(0);
+  const [isDragging, setIsDragging] = useState(false);
   const [activePlotIndex, setActivePlotIndex] = useState(0);
   const { profile, loading: profileLoading } = useProfile();
 
@@ -36,6 +42,39 @@ export default function HomePage({
     return new Date(b.updated_at) - new Date(a.updated_at);
   });
   const plotsToShow = sortedPlots.slice(0, 5);
+
+  const handleMouseDown = (e) => {
+    if (!sliderRef.current) return;
+    isDownRef.current = true;
+    dragDistanceRef.current = 0;
+    startXRef.current = e.pageX - sliderRef.current.offsetLeft;
+    scrollLeftRef.current = sliderRef.current.scrollLeft;
+    setIsDragging(true);
+  };
+
+  const handleMouseMove = (e) => {
+    if (!isDownRef.current || !sliderRef.current) return;
+    e.preventDefault();
+    const x = e.pageX - sliderRef.current.offsetLeft;
+    const walk = (x - startXRef.current) * 1.5;
+    dragDistanceRef.current = Math.abs(walk);
+    sliderRef.current.scrollLeft = scrollLeftRef.current - walk;
+  };
+
+  const handleMouseUpOrLeave = () => {
+    isDownRef.current = false;
+    setIsDragging(false);
+  };
+
+  const handlePlotSelectWithDragCheck = (id) => {
+    if (dragDistanceRef.current > 6) return;
+    onSelectPlot(id);
+  };
+
+  const handleAddPlotWithDragCheck = () => {
+    if (dragDistanceRef.current > 6) return;
+    onOpenAddPlot();
+  };
 
   const handleSliderScroll = () => {
     if (!sliderRef.current) return;
@@ -84,11 +123,11 @@ export default function HomePage({
   };
 
   return (
-    <div className="animate-fade-in space-y-0 bg-[#f5f9ed] min-h-screen pb-[80px] relative">
+    <div className="animate-fade-in bg-[#f5f9ed] min-h-screen relative">
       {/* SECTION A: Curved Green Hero Banner (Bg Dark) */}
-      <section className="bg-gradient-to-t from-[#c6d5a2] to-[#25812a] rounded-b-[30px] pt-5 pb-24 px-6 relative overflow-hidden text-white shadow-xs">
+      <section className="bg-gradient-to-t from-[#c6d5a2] to-[#25812a] rounded-b-[30px] pt-10 pb-24 px-6 relative overflow-hidden text-white shadow-xs">
         <div className="relative z-10 flex flex-col justify-between max-w-sm">
-          <div>
+          <div className="mt-10">
             <p className="text-[#fbf9f3] text-[13px] sm:text-[15px] font-['Montserrat_Alternates',sans-serif] font-medium tracking-tight">
               {getGreetingTime()}
             </p>
@@ -105,7 +144,7 @@ export default function HomePage({
         {/* Right Streak Character Illustration */}
         <img
           src="/assets/figma/streak.svg"
-          className="absolute -right-2 top-3 w-[150px] h-[180px] pointer-events-none object-contain select-none"
+          className="absolute right-5 top-10 w-[150px] h-[180px] pointer-events-none object-contain select-none"
           alt="Streak Farmer"
         />
       </section>
@@ -197,18 +236,23 @@ export default function HomePage({
         <div
           ref={sliderRef}
           onScroll={handleSliderScroll}
+          onMouseDown={handleMouseDown}
+          onMouseMove={handleMouseMove}
+          onMouseUp={handleMouseUpOrLeave}
+          onMouseLeave={handleMouseUpOrLeave}
           style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-          className="flex gap-3 overflow-x-auto pb-2 scrollbar-none snap-x snap-mandatory [&::-webkit-scrollbar]:hidden"
+          className={`flex gap-2 overflow-x-auto pb-2 scrollbar-none snap-x snap-mandatory [&::-webkit-scrollbar]:hidden select-none ${isDragging ? 'cursor-grabbing !snap-none' : 'cursor-grab'
+            }`}
         >
           {plotsToShow.map((plot) => (
             <div key={plot.id} className="snap-start shrink-0">
-              <PlotCardMini plot={plot} onSelect={onSelectPlot} />
+              <PlotCardMini plot={plot} onSelect={handlePlotSelectWithDragCheck} />
             </div>
           ))}
 
           {/* Tambah Tanaman Card (Figma 56:186 cardTambah) */}
           <div
-            onClick={onOpenAddPlot}
+            onClick={handleAddPlotWithDragCheck}
             className="w-[145px] sm:w-[155px] h-[200px] bg-[#fbf9f3] rounded-[20px] shadow-[0px_2px_8px_rgba(0,0,0,0.06)] border border-slate-100/80 p-1.5 shrink-0 cursor-pointer group snap-start active:scale-[0.98] transition-all select-none"
           >
             <div className="border border-[#8f8e94]/50 border-dashed rounded-[16px] h-full flex flex-col items-center justify-center gap-1 group-hover:bg-white/60 transition-colors p-3">
@@ -230,8 +274,8 @@ export default function HomePage({
                 key={idx}
                 onClick={() => scrollToPlot(idx)}
                 className={`h-1.5 rounded-full transition-all duration-300 ${activePlotIndex === idx
-                    ? 'w-5 bg-[#28502d]'
-                    : 'w-1.5 bg-slate-300 hover:bg-slate-400'
+                  ? 'w-5 bg-[#28502d]'
+                  : 'w-1.5 bg-slate-300 hover:bg-slate-400'
                   }`}
                 aria-label={`Plot ${idx + 1}`}
               />
@@ -241,13 +285,13 @@ export default function HomePage({
       </section>
 
       {/* SECTION D: 2-Column Grid (Perawatan hari ini & Insights) */}
-      <div className="grid grid-cols-2 gap-3 sm:gap-4 px-4 mt-3">
+      <div className="flex flex-cols gap-3 sm:gap-4 px-4 mt-6">
         {/* Perawatan hari ini Card */}
-        <section className="min-w-0">
+        <section className="w-1/2">
           <h2 className="text-[13px] sm:text-[15px] font-['Montserrat_Alternates',sans-serif] font-bold text-[#3c3b3b] mb-1.5 sm:mb-2 truncate">
             Perawatan hari ini
           </h2>
-          <div className="bg-[#fbf9f3] rounded-[20px] p-3 sm:p-4 shadow-[0px_2px_8px_rgba(0,0,0,0.06)] flex flex-col justify-between border border-slate-100 h-[190px] overflow-hidden">
+          <div className="bg-[#fbf9f3] rounded-[20px] p-3 sm:p-4 shadow-[0px_2px_8px_rgba(0,0,0,0.06)] flex flex-col justify-between border border-slate-100 h-[160px] overflow-hidden">
             <div className="space-y-1.5 sm:space-y-2 overflow-y-auto pr-0.5 flex-1">
               {pendingActions.length > 0 ? (
                 pendingActions.slice(0, 2).map((act, idx) => (
@@ -297,20 +341,26 @@ export default function HomePage({
         </section>
 
         {/* Insights Card */}
-        <section className="min-w-0">
+        <section className="w-1/2">
           <h2 className="text-[13px] sm:text-[15px] font-['Montserrat_Alternates',sans-serif] font-bold text-[#3c3b3b] mb-1.5 sm:mb-2 truncate">
             Insights
           </h2>
           <div
             onClick={() => onNavigateTab('insights')}
-            className="bg-[#fbf9f3] rounded-[20px] p-3 sm:p-4 shadow-[0px_2px_8px_rgba(0,0,0,0.06)] flex flex-col justify-between border border-slate-100 h-[190px] relative overflow-hidden cursor-pointer group hover:shadow-md transition-all"
+            className="bg-[#fbf9f3] rounded-[20px] p-3 sm:p-4 shadow-[0px_2px_8px_rgba(0,0,0,0.06)] flex flex-col justify-between border border-slate-100 h-[160px] relative overflow-hidden cursor-pointer group hover:shadow-md transition-all"
           >
             {/* Top Area */}
-            <div className="flex items-start justify-between gap-1 sm:gap-2">
-              <div className="text-[10px] sm:text-[11px] font-['Montserrat_Alternates',sans-serif] font-semibold text-[#3c3b3b] leading-snug min-w-0">
-                Tomat tumbuh <span className="text-[#578a3e] font-bold">3% lebih cepat</span> dari minggu ke-1
+            <div className="flex flex-col  sm:gap-2">
+              <div className="text-[12px] sm:text-[11px] font-['Montserrat_Alternates',sans-serif] font-semibold text-[#3c3b3b] leading-snug min-w-0">
+                Tomat tumbuh
+                <br />
+                <span className="text-[#578a3e] font-bold">
+                  3% lebih cepat
+                </span>
+                <br />
+                dari minggu ke-1
               </div>
-              <img src="/assets/figma/insights_growth.svg" className="w-[60px] h-[36px] sm:w-[85px] sm:h-[50px] object-contain shrink-0 -mr-1 group-hover:scale-105 transition-transform" alt="Growth Graph" />
+              <img src="/assets/figma/insights_growth.svg" className="w-full h-[60px] -mt-5 sm:w-[85px] sm:h-[50px] object-contain shrink-0 group-hover:scale-105 transition-transform" alt="Growth Graph" />
             </div>
 
             {/* Bottom Causes Area */}
@@ -344,27 +394,37 @@ export default function HomePage({
           {/* Berita Card */}
           <div
             onClick={() => onNavigateTab('insights')}
-            className="bg-[#fbf9f3] rounded-[20px] p-3 sm:p-4 shadow-[0px_2px_8px_rgba(0,0,0,0.06)] flex flex-col justify-between border border-slate-100 cursor-pointer hover:shadow-md transition-all h-[135px] overflow-hidden"
+            className="bg-[#fbf9f3] rounded-[20px] p-3 sm:p-4 shadow-[0px_2px_8px_rgba(0,0,0,0.06)] flex flex-col justify-center border border-slate-100 cursor-pointer hover:shadow-md transition-all h-[140x] overflow-hidden"
           >
             <div>
-              <span className="bg-[#28502d] text-[#fbf9f3] text-[8px] sm:text-[9px] font-['Manrope',sans-serif] font-extrabold px-2 py-0.5 rounded-full inline-block mb-1 sm:mb-1.5 uppercase tracking-wider">
-                BERITA
-              </span>
-              <h4 className="text-[11px] sm:text-[12px] font-['Montserrat_Alternates',sans-serif] font-bold text-[#3c3b3b] leading-tight line-clamp-2">
-                5 Cara Efektif Mencegah Hama pada Tanaman
-              </h4>
+              <div className="w-full flex flex-row justify-center items-center">
+                <div className="w-3/4 -mt-8">
+                  <span className="bg-[#28502d] text-[#fbf9f3] text-[8px] sm:text-[9px] font-['Manrope',sans-serif] font-extrabold px-2 py-0.5 rounded-full inline-block mb-1 sm:mb-1.5 uppercase tracking-wider">
+                    BERITA
+                  </span>
+                  <h4 className="text-[11px] sm:text-[12px] font-['Montserrat_Alternates',sans-serif] font-bold text-[#3c3b3b] leading-tight line-clamp-3">
+                    5 Cara Efektif Mencegah Hama pada Tanaman
+                  </h4>
+                </div>
+                <div className="w-1/2 flex items-center justify-center">
+                  <img
+                    src="/assets/figma/berita.png"
+                    className="w-[70px] h-[70px] sm:w-[46px] sm:h-[46px] rounded-[10px] sm:rounded-[12px] object-cover shrink-0 shadow-xs"
+                    alt="Berita"
+                    onError={(e) => { e.target.src = '/assets/figma/image9.png'; }}
+                  />
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between gap-2 -mt-3">
+                <p className="text-[8px] sm:text-[9px] font-['Montserrat_Alternates',sans-serif] text-[#6f6e72] truncate">
+                  Tips • 5 min
+                </p>
+              </div>
             </div>
-            <div className="flex items-center justify-between gap-2 mt-1">
-              <p className="text-[8px] sm:text-[9px] font-['Montserrat_Alternates',sans-serif] text-[#6f6e72] truncate">
-                Tips • 5 min
-              </p>
-              <img
-                src="/assets/figma/berita.png"
-                className="w-[38px] h-[38px] sm:w-[46px] sm:h-[46px] rounded-[10px] sm:rounded-[12px] object-cover shrink-0 shadow-xs"
-                alt="Berita"
-                onError={(e) => { e.target.src = '/assets/figma/image9.png'; }}
-              />
-            </div>
+
+
+
           </div>
 
           {/* Pasar Card */}
