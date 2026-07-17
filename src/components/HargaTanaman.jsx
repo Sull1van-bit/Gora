@@ -3,6 +3,7 @@ import useMarketPrices from '../hooks/useMarketPrices';
 import useUserLocation from '../hooks/useUserLocation';
 import { INITIAL_KOMODITAS } from '../services/dataStore';
 import { RiMapPin2Fill, RiLoader4Line, RiLineChartLine, RiGlobalLine, RiTimeLine, RiRefreshLine, RiSearchLine, RiCloseLine, RiLightbulbFlashLine, RiBox3Line, RiLeafFill, RiPlantFill, RiSeedlingFill } from 'react-icons/ri';
+import UniversalIcon from '../utils/iconHelper';
 
 const FALLBACK_PRICES = INITIAL_KOMODITAS.map((k) => ({
   id: k.id,
@@ -115,12 +116,7 @@ export default function HargaKomoditas() {
               <tr key={item.id ?? idx} className="hover:bg-emerald-50/30 transition-colors">
                 <td className="p-3.5">
                   <div className="flex items-center gap-2.5">
-                    <span className="text-xl leading-none text-emerald-600">
-                      {item.nama.includes('Tomat') ? <RiPlantFill /> :
-                       item.nama.includes('Cabai') ? <RiLeafFill /> :
-                       item.nama.includes('Padi') ? <RiSeedlingFill /> :
-                       <RiLeafFill />}
-                    </span>
+                    <UniversalIcon icon={item.icon || item.nama} className="w-5 h-5 text-emerald-600 shrink-0" />
                     <span className="text-xs font-bold text-slate-800">{item.nama}</span>
                   </div>
                 </td>

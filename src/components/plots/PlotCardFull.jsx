@@ -1,4 +1,5 @@
 import React from 'react';
+import UniversalIcon from '../../utils/iconHelper';
 
 export default function PlotCardFull({ plot, onSelect }) {
   const getStatusStyle = (status) => {
@@ -57,16 +58,7 @@ export default function PlotCardFull({ plot, onSelect }) {
       </div>
 
       <div className="size-[55px] bg-[#fbf9f3] rounded-full absolute top-[70px] sm:top-[82px] left-[10px] shadow-[0px_2px_4px_rgba(0,0,0,0.1)] flex items-center justify-center z-10 border-2 border-[#fbf9f3] text-emerald-600">
-        <span className="text-[30px] leading-none select-none flex items-center justify-center text-black">
-          {plot.komoditas_icon ? plot.komoditas_icon :
-           plot.komoditas_nama?.includes('Tomat') ? '🍅' :
-           plot.komoditas_nama?.includes('Cabai') ? '🌶️' :
-           plot.komoditas_nama?.includes('Padi') ? '🌾' :
-           plot.komoditas_nama?.includes('Jagung') ? '🌽' :
-           plot.komoditas_nama?.includes('Bawang') ? '🧅' :
-           plot.komoditas_nama?.includes('Kubis') ? '🥬' :
-           '🌱'}
-        </span>
+        <UniversalIcon icon={plot.komoditas_icon || plot.komoditas_nama} className="w-7 h-7 text-[#3a6c3d]" />
       </div>
 
       <div className="pt-2.5 pb-4 px-4 relative">

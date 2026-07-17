@@ -40,20 +40,39 @@ import {
 } from 'react-icons/ri';
 
 const STRING_ICON_MAP = {
-  // Crop / Komoditas mappings (both string keys and legacy emojis from localStorage)
+  // Crop / Komoditas mappings (English, Indonesian, both lowercase and formatted keys, and emojis)
   'tomato': RiPlantLine,
+  'tomat': RiPlantLine,
+  'tomat_(tomato)': RiPlantLine,
   '🍅': RiPlantLine,
   'chili': RiSeedlingLine,
+  'cabai': RiSeedlingLine,
+  'cabai_merah': RiSeedlingLine,
+  'cabai_merah_(chili)': RiSeedlingLine,
   '🌶️': RiSeedlingLine,
   'rice': RiLeafLine,
+  'padi': RiLeafLine,
+  'padi_(rice)': RiLeafLine,
   '🌾': RiLeafLine,
   'corn': RiEarthLine,
+  'jagung': RiEarthLine,
+  'jagung_(corn)': RiEarthLine,
   '🌽': RiEarthLine,
   'shallot': RiPlantLine,
+  'bawang': RiPlantLine,
+  'bawang_merah': RiPlantLine,
+  'bawang_merah_(shallot)': RiPlantLine,
   '🧅': RiPlantLine,
   'cabbage': RiLeafLine,
+  'kubis': RiLeafLine,
+  'kubis_(cabbage)': RiLeafLine,
   '🥬': RiLeafLine,
   'plant': RiPlantLine,
+  'tanaman': RiPlantLine,
+  'sayur': RiLeafLine,
+  'sayuran': RiLeafLine,
+  'leaf': RiLeafLine,
+  'seedling': RiSeedlingLine,
   '🌱': RiPlantLine,
 
   // Weather mappings
@@ -125,10 +144,55 @@ export default function UniversalIcon({ icon, className = "w-5 h-5 inline-block 
     return <IconComponent className={className} />;
   }
 
-  // If icon is a string (key or legacy emoji)
+  // If icon is a string (key, legacy emoji, name, or image URL)
   if (typeof icon === 'string') {
-    const MappedIcon = STRING_ICON_MAP[icon] || STRING_ICON_MAP[icon.trim()] || RiPlantLine;
-    return <MappedIcon className={className} />;
+    const trimmed = icon.trim();
+
+    // If icon is an image path or URL
+    if (
+      trimmed.startsWith('/') ||
+      trimmed.startsWith('./') ||
+      trimmed.startsWith('http://') ||
+      trimmed.startsWith('https://') ||
+      trimmed.startsWith('data:image/') ||
+      trimmed.endsWith('.png') ||
+      trimmed.endsWith('.svg') ||
+      trimmed.endsWith('.jpg') ||
+      trimmed.endsWith('.webp')
+    ) {
+      return (
+        <img
+          src={trimmed}
+          className={`${className} object-contain`}
+          alt=""
+          onError={(e) => { e.target.style.display = 'none'; }}
+        />
+      );
+    }
+
+    const lower = trimmed.toLowerCase();
+    const normalized = lower.replace(/\s+/g, '_');
+
+    // Direct and normalized lookup
+    const MappedIcon =
+      STRING_ICON_MAP[trimmed] ||
+      STRING_ICON_MAP[lower] ||
+      STRING_ICON_MAP[normalized];
+
+    if (MappedIcon) {
+      return <MappedIcon className={className} />;
+    }
+
+    // Partial match lookup for crop names passed as text (e.g., "Tomat (Tomato)")
+    if (lower.includes('tomat')) return <RiPlantLine className={className} />;
+    if (lower.includes('cabai') || lower.includes('chili')) return <RiSeedlingLine className={className} />;
+    if (lower.includes('padi') || lower.includes('rice')) return <RiLeafLine className={className} />;
+    if (lower.includes('jagung') || lower.includes('corn')) return <RiEarthLine className={className} />;
+    if (lower.includes('bawang') || lower.includes('shallot')) return <RiPlantLine className={className} />;
+    if (lower.includes('kubis') || lower.includes('cabbage')) return <RiLeafLine className={className} />;
+    if (lower.includes('sayur') || lower.includes('leaf')) return <RiLeafLine className={className} />;
+
+    return <RiPlantLine className={className} />;
   }
 
   return <RiPlantLine className={className} />;

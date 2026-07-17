@@ -108,11 +108,7 @@ export default function PlotCardMini({ plot, onSelect }) {
         />
         {/* Overlapping circular icon badge like origin/main */}
         <div className="-bottom-3.5 left-2.5 w-7 h-7 rounded-full bg-white shadow-sm flex items-center justify-center text-sm absolute z-10 border border-slate-100 text-emerald-600">
-          {plot.komoditas_icon ? <span className="text-base leading-none">{plot.komoditas_icon}</span> :
-           plot.komoditas_nama?.includes('Tomat') ? <RiPlantFill /> :
-           plot.komoditas_nama?.includes('Cabai') ? <RiLeafFill /> :
-           plot.komoditas_nama?.includes('Padi') ? <RiSeedlingFill /> :
-           <RiLeafFill />}
+          <UniversalIcon icon={plot.komoditas_icon || plot.komoditas_nama} className="w-4 h-4 text-[#3a6c3d]" />
         </div>
       </div>
 

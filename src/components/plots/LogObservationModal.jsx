@@ -3,6 +3,7 @@ import {
   RiCheckLine, RiCloseLine, RiAddLine, RiCameraLine, RiDropLine, 
   RiWaterFlashLine, RiPlantLine, RiScissorsCutLine, RiBugLine 
 } from 'react-icons/ri';
+import UniversalIcon from '../../utils/iconHelper';
 
 export default function LogObservationModal({
   isOpen,
@@ -170,7 +171,7 @@ export default function LogObservationModal({
               alt={plot.plot_name}
             />
             <div className="absolute -bottom-1 -right-1 size-6 rounded-full bg-white shadow-sm flex items-center justify-center text-xs border border-slate-100">
-              {plot.komoditas_icon || '🌱'}
+              <UniversalIcon icon={plot.komoditas_icon || plot.komoditas_nama} className="w-3.5 h-3.5 text-[#3a6c3d]" />
             </div>
           </div>
 
