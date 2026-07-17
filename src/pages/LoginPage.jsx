@@ -45,6 +45,9 @@ export default function LoginPage({ onLoginSuccess, onNavigateRegister, onBack }
       
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: provider,
+        options: {
+          redirectTo: 'com.garuda.gora://login-callback'
+        }
       });
       if (error) throw error;
       

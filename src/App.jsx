@@ -19,9 +19,28 @@ import useUserLocation from './hooks/useUserLocation';
 import useWeather from './hooks/useWeather';
 import useNews from './hooks/useNews';
 import { RiLoader4Line } from 'react-icons/ri';
+import { App as CapApp } from '@capacitor/app';
+import { supabase } from './lib/supabaseClient';
 
 export default function App() {
   const { session, loading: authLoading, signOut } = useAuth();
+
+  useEffect(() => {
+    const handleDeepLink = async (event) => {
+      if (event.url.includes('login-callback')) {
+        const url = new URL(event.url);
+        if (url.hash || url.search) {
+          window.history.replaceState({}, document.title, url.pathname + url.search + url.hash);
+          await supabase.auth.getSession();
+        }
+      }
+    };
+    CapApp.addListener('appUrlOpen', handleDeepLink);
+    return () => {
+      CapApp.removeAllListeners();
+    };
+  }, []);
+
 
   const {
     plots,

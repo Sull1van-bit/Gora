@@ -45,7 +45,12 @@ export default function RegisterPage({ onBackToLogin, onRegisterSuccess }) {
   const handleOAuthLogin = async (provider) => {
     try {
       if (!supabase) throw new Error("Koneksi Supabase belum siap.");
-      const { error } = await supabase.auth.signInWithOAuth({ provider });
+      const { error } = await supabase.auth.signInWithOAuth({ 
+        provider,
+        options: {
+          redirectTo: 'com.garuda.gora://login-callback'
+        }
+      });
       if (error) throw error;
     } catch (err) {
       setErrorMsg(err.message || `Gagal mendaftar dengan ${provider}.`);
