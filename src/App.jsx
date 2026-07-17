@@ -5,18 +5,23 @@ import PlotsPage from './pages/PlotsPage';
 import PlotDetailPage from './pages/PlotDetailPage';
 import InsightsPage from './pages/InsightsPage';
 import ProfilePage from './pages/ProfilePage';
+import LoginPage from './pages/LoginPage';
 import AddPlotModal from './components/plots/AddPlotModal';
 import useGoraData from './hooks/useGoraData';
+import useAuth from './hooks/useAuth';
 import useUserLocation from './hooks/useUserLocation';
 import useWeather from './hooks/useWeather';
+import useNews from './hooks/useNews';
+import { RiLoader4Line } from 'react-icons/ri';
 
 export default function App() {
+  const { session, loading: authLoading, signOut } = useAuth();
+
   const {
     plots,
     actions,
     activities,
     komoditasList,
-    newsList,
     completeAction,
     addPlot,
     logActivity,
@@ -25,15 +30,15 @@ export default function App() {
   } = useGoraData();
 
   const { latitude, longitude, provinsi, kecamatan, loading: locLoading, refetch: refetchLocation } = useUserLocation();
-  const { weather, hourlyForecast, weeklyForecast } = useWeather(latitude, longitude);
+  const { weatherData: weather, loading: weatherLoading, hourlyForecast, weeklyForecast } = useWeather();
+  const { newsList, loading: newsLoading } = useNews();
   const locationLabel = kecamatan && provinsi ? `${kecamatan}, ${provinsi}` : null;
 
-  const [activeTab, setActiveTab] = useState('home'); // 'home' | 'plots' | 'insights' | 'profile' | 'plot-detail'
+  const [activeTab, setActiveTab] = useState('home');
   const [selectedPlotId, setSelectedPlotId] = useState(null);
   const [insightsTab, setInsightsTab] = useState('weather');
   const [isAddPlotModalOpen, setIsAddPlotModalOpen] = useState(false);
 
-  // Handle URL hash sync for Capacitor navigation & back button
   useEffect(() => {
     const handleHashChange = () => {
       const hash = window.location.hash.replace('#', '') || 'home';
@@ -52,7 +57,7 @@ export default function App() {
     };
 
     window.addEventListener('hashchange', handleHashChange);
-    handleHashChange(); // Initial check
+    handleHashChange();
 
     return () => window.removeEventListener('hashchange', handleHashChange);
   }, []);
@@ -90,11 +95,23 @@ export default function App() {
       case 'home':
       default:
         return {
-          headerTitle: null, // Shows custom GORA logo header
+          headerTitle: null,
           headerSubtitle: 'Solusi Pintar Pertanian Nusantara',
         };
     }
   };
+
+  if (authLoading) {
+    return (
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', fontFamily: 'sans-serif', color: '#555', gap: '8px' }}>
+        <RiLoader4Line className="animate-spin text-xl" /> <p>Memuat...</p>
+      </div>
+    );
+  }
+
+  if (!session) {
+    return <LoginPage onLoginSuccess={(s) => {  }} />;
+  }
 
   return (
     <>
@@ -118,7 +135,9 @@ export default function App() {
             actions={actions}
             activities={activities}
             weather={weather}
+            weatherLoading={weatherLoading}
             komoditasList={komoditasList}
+            newsList={newsList}
             onCompleteAction={completeAction}
             onSelectPlot={(id) => navigateTo('plot-detail', id)}
             onNavigateTab={navigateTo}
@@ -160,13 +179,15 @@ export default function App() {
             weeklyForecast={weeklyForecast}
             locationLabel={locationLabel}
             newsList={newsList}
+            newsLoading={newsLoading}
             initialTab={insightsTab}
           />
         )}
 
         {activeTab === 'profile' && (
-          <ProfilePage
-            plots={plots}
+          <ProfilePage 
+            plots={plots} 
+            onSignOut={signOut} 
             onResetDemoData={resetDemoData}
             provinsi={provinsi}
             kecamatan={kecamatan}

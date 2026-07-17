@@ -1,201 +1,189 @@
-import React, { useState, useEffect } from 'react';
-import { RiLineChartLine, RiTimeLine, RiSearchLine, RiCloseLine, RiLightbulbLine, RiArrowUpSLine, RiArrowDownSLine } from 'react-icons/ri';
-import UniversalIcon from '../utils/iconHelper';
-import { supabase } from '../lib/supabaseClient';
+import React, { useState } from 'react';
+import useMarketPrices from '../hooks/useMarketPrices';
+import useUserLocation from '../hooks/useUserLocation';
 import { INITIAL_KOMODITAS } from '../services/dataStore';
+import { RiMapPin2Fill, RiLoader4Line, RiLineChartLine, RiGlobalLine, RiTimeLine, RiRefreshLine, RiSearchLine, RiCloseLine, RiLightbulbFlashLine, RiBox3Line, RiLeafFill, RiPlantFill, RiSeedlingFill } from 'react-icons/ri';
+
+const FALLBACK_PRICES = INITIAL_KOMODITAS.map((k) => ({
+  id: k.id,
+  nama: k.nama,
+  harga: k.avgPrice,
+  satuan: k.satuan,
+  icon: k.icon,
+  perubahan: k.trend === 'up' ? 5.0 : k.trend === 'down' ? -5.0 : 0,
+  wilayah: 'Pasar Induk (Data Referensi)',
+}));
+
+function TrendArrow({ perubahan }) {
+  if (perubahan == null) return null;
+  const n = Number(perubahan);
+  if (n > 0) return <span className="ml-1 text-emerald-500 font-bold">↑ {n.toFixed(1)}%</span>;
+  if (n < 0) return <span className="ml-1 text-rose-500 font-bold">↓ {Math.abs(n).toFixed(1)}%</span>;
+  return <span className="ml-1 text-slate-400">→</span>;
+}
 
 export default function HargaKomoditas() {
-    const [dataHarga, setDataHarga] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [waktuUpdate, setWaktuUpdate] = useState('');
-    const [errorMsg, setErrorMsg] = useState('');
-    const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
 
-    const fallbackData = INITIAL_KOMODITAS.map(kom => ({
-        id: kom.id,
-        nama: kom.nama,
-        harga: kom.avgPrice,
-        satuan: kom.satuan,
-        trend: kom.trend,
-        icon: kom.icon,
-        wilayah: 'Pasar Induk Batu & Malang (Data Referensi)',
-    }));
+  const {
+    lat, lon,
+    kecamatan, kota, provinsi,
+    loading: locLoading,
+    error: locError,
+  } = useUserLocation();
 
-    const ambilData = async () => {
-        try {
-            setErrorMsg('');
-            const today = new Date().toISOString().split('T')[0];
+  const {
+    prices,
+    nearestWilayah,
+    loading: pricesLoading,
+    error: pricesError,
+    lastUpdated,
+    refetch,
+  } = useMarketPrices({ lat, lon });
 
-            if (!supabase) {
-                setDataHarga(fallbackData);
-                setWaktuUpdate(new Date().toLocaleTimeString('id-ID'));
-                setLoading(false);
-                return;
-            }
+  const loading = locLoading || pricesLoading;
+  const isFallback = prices.length === 0 && !pricesLoading;
+  const dataHarga = isFallback ? FALLBACK_PRICES : prices;
 
-            const { data, error } = await supabase
-                .from('harga_pasar')
-                .select('*')
-                .eq('tanggal', today)
-                .order('nama_komoditas');
+  const filteredHarga = dataHarga.filter(
+    (item) =>
+      item.nama.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (item.wilayah && item.wilayah.toLowerCase().includes(searchQuery.toLowerCase()))
+  );
 
-            if (error || !data || data.length === 0) {
-                const fallbackFromDB = await fetchLatestAvailable();
-                if (fallbackFromDB.length > 0) {
-                    setDataHarga(fallbackFromDB);
-                } else {
-                    setDataHarga(fallbackData);
-                }
-            } else {
-                setDataHarga(data.map(item => ({
-                    id: item.id,
-                    nama: item.nama_komoditas,
-                    harga: item.harga,
-                    satuan: item.satuan || 'Kg',
-                    trend: item.trend || 'stable',
-                    icon: item.icon || 'rice',
-                    wilayah: item.wilayah || 'Pasar Induk Batu',
-                })));
-            }
-            setWaktuUpdate(new Date().toLocaleTimeString('id-ID'));
-        } catch (err) {
-            console.error('Error fetching market prices:', err);
-            setDataHarga(fallbackData);
-            setErrorMsg('Menggunakan data pasar referensi offline.');
-        } finally {
-            setLoading(false);
-        }
-    };
+  const waktuUpdate = lastUpdated
+    ? lastUpdated.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
+    : null;
 
-    const fetchLatestAvailable = async () => {
-        if (!supabase) return [];
-        const { data } = await supabase
-            .from('harga_pasar')
-            .select('*')
-            .order('tanggal', { ascending: false })
-            .limit(10);
-        if (!data) return [];
-        return data.map(item => ({
-            id: item.id,
-            nama: item.nama_komoditas,
-            harga: item.harga,
-            satuan: item.satuan || 'Kg',
-            trend: item.trend || 'stable',
-            icon: item.icon || 'rice',
-            wilayah: item.wilayah || 'Pasar Induk Batu',
-        }));
-    };
+  const lokasiLabel = nearestWilayah
+    ? `${nearestWilayah.nama_pasar ?? [nearestWilayah.kecamatan, nearestWilayah.kota].filter(Boolean).join(', ')} (${nearestWilayah.jarak_km?.toFixed(1)} km)`
+    : !locLoading && !locError && (kecamatan || kota || provinsi)
+    ? [kecamatan, kota, provinsi].filter(Boolean).join(', ')
+    : null;
 
-    useEffect(() => {
-        ambilData();
-    }, []);
-
-    const filteredHarga = dataHarga.filter(item =>
-        item.nama.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        item.wilayah.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-
-    if (loading) {
-        return (
-            <div className="flex justify-center items-center py-12">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600"></div>
-            </div>
-        );
-    }
-
+  if (loading) {
     return (
-        <div className="space-y-3 animate-fade-in">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between pb-2">
-                <div>
-                    <h2 className="text-base font-extrabold text-slate-800 font-['Montserrat_Alternates',sans-serif] flex items-center gap-1.5">
-                        <RiLineChartLine className="w-5 h-5 text-emerald-600 shrink-0" />
-                        <span>Harga Komoditas Pasar (Market Insight)</span>
-                    </h2>
-                    <p className="text-xs text-slate-500">Pantau fluktuasi harga komoditas pertanian harian</p>
-                </div>
-                <div className="flex items-center gap-2 mt-2 sm:mt-0">
-                    {waktuUpdate && (
-                        <span className="text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200 flex items-center gap-1.5">
-                            <RiTimeLine className="w-3.5 h-3.5 shrink-0" />
-                            <span>{waktuUpdate} WIB</span>
-                        </span>
-                    )}
-                </div>
-            </div>
-
-            {/* Search filter */}
-            <div className="relative">
-                <input
-                    type="text"
-                    placeholder="Cari komoditas atau wilayah pasar..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full bg-white border border-slate-200 rounded-2xl pl-10 pr-4 py-2.5 text-xs font-medium focus:ring-2 focus:ring-emerald-500 outline-none shadow-2xs transition-all"
-                />
-                <RiSearchLine className="w-4 h-4 text-slate-400 absolute left-3.5 top-3 pointer-events-none" />
-                {searchQuery && (
-                    <button
-                        onClick={() => setSearchQuery('')}
-                        className="absolute right-3 top-2.5 text-xs text-slate-400 hover:text-slate-600 bg-slate-100 rounded-full w-5 h-5 flex items-center justify-center font-bold"
-                    >
-                        <RiCloseLine className="w-4 h-4" />
-                    </button>
-                )}
-            </div>
-
-            {errorMsg && (
-                <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-[11px] text-amber-800 flex items-center justify-between">
-                    <span className="flex items-center gap-1.5">
-                        <RiLightbulbLine className="w-4 h-4 text-amber-600 shrink-0" />
-                        <span>{errorMsg}</span>
-                    </span>
-                    <button
-                        onClick={() => { setLoading(true); ambilData(); }}
-                        className="underline font-bold hover:text-amber-900 shrink-0 ml-2"
-                    >
-                        Refresh
-                    </button>
-                </div>
-            )}
-
-            <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
-                <table className="w-full text-left border-collapse">
-                    <thead>
-                        <tr className="border-b border-slate-200 bg-slate-50">
-                            <th className="p-3.5 text-xs font-bold text-slate-600">Komoditas</th>
-                            <th className="p-3.5 text-xs font-bold text-slate-600">Wilayah / Sentra</th>
-                            <th className="p-3.5 text-xs font-bold text-slate-600 text-right">Harga / Satuan</th>
-                        </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100">
-                        {filteredHarga.map((item, indeks) => (
-                            <tr key={item.id || indeks} className="hover:bg-slate-50/70 transition-colors">
-                                <td className="p-3.5 text-xs font-bold text-slate-800 flex items-center gap-2">
-                                    <UniversalIcon icon={item.icon || 'rice'} className="w-5 h-5 text-emerald-600 shrink-0" />
-                                    <span>{item.nama}</span>
-                                </td>
-                                <td className="p-3.5 text-xs text-slate-500 font-medium">
-                                    {item.wilayah}
-                                </td>
-                                <td className="p-3.5 text-xs font-extrabold text-emerald-600 text-right">
-                                    Rp {new Intl.NumberFormat('id-ID').format(item.harga)}
-                                    <span className="text-slate-400 font-normal">/{item.satuan}</span>
-                                    {item.trend && (
-                                        <span className={`inline-flex items-center ml-1 font-bold ${item.trend === 'up' ? 'text-emerald-500' : item.trend === 'down' ? 'text-rose-500' : 'text-slate-400'}`}>
-                                            {item.trend === 'up' ? <RiArrowUpSLine className="w-4 h-4 inline" /> : item.trend === 'down' ? <RiArrowDownSLine className="w-4 h-4 inline" /> : '—'}
-                                        </span>
-                                    )}
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-                {filteredHarga.length === 0 && (
-                    <div className="p-6 text-center text-xs text-slate-400">
-                        Tidak ditemukan komoditas dengan kata kunci tersebut.
-                    </div>
-                )}
-            </div>
-        </div>
+      <div className="w-full p-8 flex items-center justify-center text-slate-500 font-medium animate-pulse gap-2">
+        <RiLoader4Line className="animate-spin text-lg" />
+        {locLoading ? 'Mendeteksi lokasi Anda...' : 'Memuat data harga pasar...'}
+      </div>
     );
+  }
+
+  return (
+    <div className="space-y-3 animate-fade-in">
+      
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between pb-1">
+        <div>
+          <h2 className="text-base font-extrabold text-slate-800 font-['Montserrat_Alternates',sans-serif] flex items-center gap-1.5">
+            <RiLineChartLine /> Harga Komoditas Pasar
+          </h2>
+          {lokasiLabel ? (
+            <p className="text-xs text-emerald-700 font-semibold mt-0.5 flex items-center gap-1">
+              <RiMapPin2Fill /> Pasar terdekat: {lokasiLabel}
+            </p>
+          ) : locError ? (
+            <p className="text-xs text-amber-600 mt-0.5 flex items-center gap-1">
+              <RiGlobalLine /> Lokasi tidak terdeteksi — menampilkan data nasional
+            </p>
+          ) : (
+            <p className="text-xs text-slate-400 mt-0.5">Harga sesuai pasar terdekat Anda</p>
+          )}
+        </div>
+        <div className="flex items-center gap-2 mt-2 sm:mt-0 shrink-0">
+          {waktuUpdate && (
+            <span className="text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200 flex items-center gap-1">
+              <RiTimeLine /> {waktuUpdate}
+            </span>
+          )}
+          <button
+            onClick={refetch}
+            className="text-[11px] font-semibold text-slate-500 bg-slate-100 hover:bg-slate-200 px-3 py-1 rounded-full border border-slate-200 transition-all active:scale-95 flex items-center gap-1"
+          >
+            <RiRefreshLine /> Refresh
+          </button>
+        </div>
+      </div>
+
+      
+      <div className="relative">
+        <input
+          type="text"
+          placeholder="Cari komoditas atau wilayah..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="w-full bg-white border border-slate-200 rounded-2xl pl-10 pr-4 py-2.5 text-xs font-medium focus:ring-2 focus:ring-emerald-500 outline-none shadow-2xs transition-all"
+        />
+        <RiSearchLine className="w-4 h-4 text-slate-400 absolute left-3.5 top-3 pointer-events-none" />
+        {searchQuery && (
+          <button
+            onClick={() => setSearchQuery('')}
+            className="absolute right-3 top-2.5 text-xs text-slate-400 hover:text-slate-600 bg-slate-100 rounded-full w-5 h-5 flex items-center justify-center font-bold"
+          ><RiCloseLine /></button>
+        )}
+      </div>
+
+      
+      {(isFallback || pricesError) && (
+        <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-[11px] text-amber-800 flex items-center gap-1.5">
+          <RiLightbulbFlashLine className="shrink-0 text-base" />
+          <span>
+            {pricesError ? 'Koneksi gagal — ' : 'Data pasar belum tersedia — '}
+            Menampilkan harga referensi.
+          </span>
+        </div>
+      )}
+
+      
+      <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
+        <table className="w-full text-left border-collapse">
+          <thead>
+            <tr className="border-b border-slate-200 bg-slate-50/80">
+              <th className="p-3.5 text-[11px] font-bold text-slate-500 uppercase tracking-wide">Komoditas</th>
+              <th className="p-3.5 text-[11px] font-bold text-slate-500 uppercase tracking-wide hidden sm:table-cell">Wilayah</th>
+              <th className="p-3.5 text-[11px] font-bold text-slate-500 uppercase tracking-wide text-right">Harga / Sat.</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-slate-100">
+            {filteredHarga.map((item, idx) => (
+              <tr key={item.id ?? idx} className="hover:bg-emerald-50/30 transition-colors">
+                <td className="p-3.5">
+                  <div className="flex items-center gap-2.5">
+                    <span className="text-xl leading-none text-emerald-600">
+                      {item.nama.includes('Tomat') ? <RiPlantFill /> :
+                       item.nama.includes('Cabai') ? <RiLeafFill /> :
+                       item.nama.includes('Padi') ? <RiSeedlingFill /> :
+                       <RiLeafFill />}
+                    </span>
+                    <span className="text-xs font-bold text-slate-800">{item.nama}</span>
+                  </div>
+                </td>
+                <td className="p-3.5 text-xs text-slate-400 font-medium hidden sm:table-cell">
+                  {item.wilayah || '—'}
+                </td>
+                <td className="p-3.5 text-right">
+                  <span className="text-xs font-extrabold text-emerald-600">
+                    Rp {new Intl.NumberFormat('id-ID').format(item.harga)}
+                  </span>
+                  <span className="text-[11px] text-slate-400">/{item.satuan}</span>
+                  <TrendArrow perubahan={item.perubahan} />
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        {filteredHarga.length === 0 && (
+          <div className="p-6 text-center text-xs text-slate-400">
+            Tidak ditemukan komoditas dengan kata kunci tersebut.
+          </div>
+        )}
+      </div>
+
+      {isFallback && (
+        <p className="text-center text-[10px] text-slate-300 pb-1">
+          Data referensi • Aktifkan lokasi untuk harga pasar terdekat
+        </p>
+      )}
+    </div>
+  );
 }

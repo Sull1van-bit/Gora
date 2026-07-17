@@ -1,30 +1,17 @@
 import React from 'react';
-import { RiCalendar2Line } from 'react-icons/ri';
+import { RiCalendar2Line, RiLeafFill, RiPlantFill, RiSeedlingFill } from 'react-icons/ri';
 import UniversalIcon from '../../utils/iconHelper';
 
 export default function PlotCardMini({ plot, onSelect }) {
   const progressPct = plot.progress || plot.growth_progress || 60;
   
-  // Calculate days to harvest or use dummy/actual property
   const daysToHarvest = plot.days_to_harvest || 28;
 
-  // Choose high quality thumbnail from cached Figma assets
   const thumbnail = plot.image_url || (
     plot.komoditas_nama?.toLowerCase().includes('tomat') 
       ? '/assets/figma/image10.png' 
       : '/assets/figma/image9.png'
   );
-
-  // Get exact emoji or icon for crop circle badge
-  const getCropEmoji = (nama) => {
-    const lower = (nama || '').toLowerCase();
-    if (lower.includes('padi') || lower.includes('rice')) return '🌾';
-    if (lower.includes('tomat') || lower.includes('tomato')) return '🍅';
-    if (lower.includes('jagung') || lower.includes('corn')) return '🌽';
-    if (lower.includes('cabai') || lower.includes('chili')) return '🌶️';
-    if (lower.includes('bawang') || lower.includes('shallot')) return '🧅';
-    return <UniversalIcon icon={plot.komoditas_icon || 'plant'} className="w-4 h-4 text-emerald-600" />;
-  };
 
   const cleanCropName = (plot.komoditas_nama || 'Tanaman').replace(/\s*\([^)]*\)/g, '').trim();
   const cleanPlotName = plot.plot_name ? plot.plot_name.split('-')[0].trim() : 'Lahan';
@@ -92,7 +79,7 @@ export default function PlotCardMini({ plot, onSelect }) {
       onClick={() => onSelect(plot.id)}
       className="w-[145px] sm:w-[155px] h-[200px] bg-[#fbf9f3] rounded-[20px] shadow-[0px_2px_8px_rgba(0,0,0,0.06)] border border-slate-100/80 overflow-hidden shrink-0 flex flex-col justify-between transition-all duration-200 active:scale-[0.98] hover:shadow-md cursor-pointer group select-none"
     >
-      {/* Top Image & Overlapping Badge */}
+      {/* Top Image & Overlapping React Icon Badge */}
       <div className="h-[80px] w-full relative bg-slate-100 overflow-visible shrink-0">
         <img 
           src={thumbnail} 
@@ -100,9 +87,12 @@ export default function PlotCardMini({ plot, onSelect }) {
           className="w-full h-full object-cover rounded-t-[20px] group-hover:scale-105 transition-transform duration-300"
           onError={(e) => { e.target.src = '/assets/figma/image9.png'; }}
         />
-        {/* Overlapping circular crop badge */}
-        <div className="-bottom-3.5 left-2 w-[29px] h-[29px] rounded-full bg-white shadow-sm flex items-center justify-center absolute z-10 border border-slate-100 text-[15px]">
-          {getCropEmoji(plot.komoditas_nama)}
+        {/* Overlapping circular icon badge like origin/main */}
+        <div className="-bottom-3.5 left-2.5 w-7 h-7 rounded-full bg-white shadow-sm flex items-center justify-center text-sm absolute z-10 border border-slate-100 text-emerald-600">
+          {plot.komoditas_nama?.includes('Tomat') ? <RiPlantFill /> :
+           plot.komoditas_nama?.includes('Cabai') ? <RiLeafFill /> :
+           plot.komoditas_nama?.includes('Padi') ? <RiSeedlingFill /> :
+           <RiLeafFill />}
         </div>
       </div>
 

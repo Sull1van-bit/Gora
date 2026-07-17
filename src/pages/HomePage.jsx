@@ -3,22 +3,27 @@ import PlotCardMini from '../components/home/PlotCardMini';
 import { RiMapPinLine, RiAddLine, RiWaterFlashLine, RiDropLine, RiCheckboxCircleLine } from 'react-icons/ri';
 import UniversalIcon from '../utils/iconHelper';
 import useUserLocation from '../hooks/useUserLocation';
+import useProfile from '../hooks/useProfile';
 
 export default function HomePage({
   plots,
   actions,
   weather,
   komoditasList,
+  newsList,
   onCompleteAction,
   onSelectPlot,
   onNavigateTab,
-  onOpenAddPlot
+  onOpenAddPlot,
+  weatherLoading
 }) {
   const { provinsi, kecamatan, loading: locLoading } = useUserLocation();
   const sliderRef = useRef(null);
   const [activePlotIndex, setActivePlotIndex] = useState(0);
+  const { profile, loading: profileLoading } = useProfile();
 
-  // Sort plots: 1. Priority Score (desc), 2. Most Recently Updated
+  const displayName = profile?.full_name || profile?.username || 'Pengguna';
+
   const sortedPlots = [...plots].sort((a, b) => {
     if (b.priority_score !== a.priority_score) {
       return b.priority_score - a.priority_score;
@@ -70,7 +75,7 @@ export default function HomePage({
   };
 
   return (
-    <div className="animate-fade-in space-y-0">
+    <div className="animate-fade-in space-y-0 bg-[#f5f9ed] min-h-screen pb-[80px] relative">
       {/* SECTION A: Curved Green Hero Banner (Bg Dark) */}
       <section className="bg-gradient-to-t from-[#c6d5a2] to-[#25812a] rounded-b-[30px] pt-5 pb-24 px-6 relative overflow-hidden text-white shadow-xs">
         <div className="relative z-10 flex flex-col justify-between max-w-sm">
@@ -80,7 +85,7 @@ export default function HomePage({
             </p>
             <div className="flex items-center gap-2 font-['Montserrat_Alternates',sans-serif] font-bold text-[22px] sm:text-[24px] text-[#fbf9f3] leading-tight mt-0.5">
               <img src="/assets/figma/leaf_bold.svg" className="w-6 h-6 sm:w-7 sm:h-7 filter brightness-0 invert shrink-0" alt="GORA" />
-              <span className="truncate">El Sullivan</span>
+              <span className="truncate">{displayName}</span>
             </div>
             <p className="text-[11px] sm:text-[12px] font-['Montserrat_Alternates',sans-serif] text-[#fbf9f3] opacity-90 mt-1">
               Pantau kondisi lahan Anda hari ini.
@@ -184,7 +189,7 @@ export default function HomePage({
           ))}
 
           {/* Tambah Tanaman Card (Figma 56:186 cardTambah) */}
-          <div 
+          <div
             onClick={onOpenAddPlot}
             className="w-[145px] sm:w-[155px] h-[200px] bg-[#fbf9f3] rounded-[20px] shadow-[0px_2px_8px_rgba(0,0,0,0.06)] border border-slate-100/80 p-1.5 shrink-0 cursor-pointer group snap-start active:scale-[0.98] transition-all select-none"
           >
@@ -206,11 +211,10 @@ export default function HomePage({
               <button
                 key={idx}
                 onClick={() => scrollToPlot(idx)}
-                className={`h-1.5 rounded-full transition-all duration-300 ${
-                  activePlotIndex === idx
+                className={`h-1.5 rounded-full transition-all duration-300 ${activePlotIndex === idx
                     ? 'w-5 bg-[#28502d]'
                     : 'w-1.5 bg-slate-300 hover:bg-slate-400'
-                }`}
+                  }`}
                 aria-label={`Plot ${idx + 1}`}
               />
             ))}

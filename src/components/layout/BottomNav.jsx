@@ -1,9 +1,32 @@
 import React from 'react';
+import { 
+  RiHome5Fill, RiHome5Line,
+  RiPlantFill, RiPlantLine,
+  RiFileTextFill, RiFileTextLine,
+  RiUser3Fill, RiUser3Line,
+  RiAddLine
+} from 'react-icons/ri';
 
 export default function BottomNav({ activeTab, onTabChange, onOpenAddPlot, urgentCount = 0 }) {
-  const navIconClass = (isActive) =>
-    `w-[25.8px] h-[25.8px] transition-all duration-200 ${
-      isActive ? 'opacity-100 drop-shadow-[0px_3px_3px_#9fb58e]' : 'opacity-70 group-hover:opacity-100'
+  const getIcon = (tab) => {
+    const isActive = activeTab === tab;
+    switch (tab) {
+      case 'home':
+        return isActive ? <RiHome5Fill className="w-[25px] h-[25px]" /> : <RiHome5Line className="w-[25px] h-[25px]" />;
+      case 'plots':
+        return isActive ? <RiPlantFill className="w-[25px] h-[25px]" /> : <RiPlantLine className="w-[25px] h-[25px]" />;
+      case 'insights':
+        return isActive ? <RiFileTextFill className="w-[25px] h-[25px]" /> : <RiFileTextLine className="w-[25px] h-[25px]" />;
+      case 'profile':
+        return isActive ? <RiUser3Fill className="w-[25px] h-[25px]" /> : <RiUser3Line className="w-[25px] h-[25px]" />;
+      default:
+        return null;
+    }
+  };
+
+  const navIconContainerClass = (isActive) =>
+    `relative flex items-center justify-center transition-all duration-200 ${
+      isActive ? 'text-[#28502d] drop-shadow-[0px_3px_3px_#9fb58e]' : 'text-[#28502d]/70 group-hover:text-[#28502d]'
     }`;
 
   const navTextClass = (isActive) =>
@@ -42,16 +65,12 @@ export default function BottomNav({ activeTab, onTabChange, onOpenAddPlot, urgen
         <div className="absolute top-0 left-1/2 -translate-x-1/2 z-20 flex items-center justify-center">
           <button
             onClick={() => (onOpenAddPlot ? onOpenAddPlot() : onTabChange('add-plot'))}
-            className="w-[47.4px] h-[47.4px] rounded-full bg-[#578a3e] drop-shadow-[0px_0px_2px_#8fb37d] flex items-center justify-center p-[9px] cursor-pointer group hover:bg-[#4d7b36] active:scale-95 transition-all"
+            className="w-[47.4px] h-[47.4px] rounded-full bg-[#578a3e] text-white drop-shadow-[0px_0px_2px_#8fb37d] flex items-center justify-center p-[9px] cursor-pointer group hover:bg-[#4d7b36] active:scale-95 transition-all"
             title="Tambah Tanaman"
             aria-label="Tambah Tanaman"
             style={{ WebkitTapHighlightColor: 'transparent' }}
           >
-            <img
-              src="/assets/figma/add_icon.svg"
-              className="w-[30px] h-[30px] filter brightness-0 invert transition-transform duration-300 group-hover:rotate-90"
-              alt=""
-            />
+            <RiAddLine className="w-7 h-7 font-bold transition-transform duration-300 group-hover:rotate-90" />
           </button>
         </div>
 
@@ -63,12 +82,8 @@ export default function BottomNav({ activeTab, onTabChange, onOpenAddPlot, urgen
             className="flex flex-col items-center justify-center flex-1 py-1 cursor-pointer group transition-transform active:scale-95"
             style={{ WebkitTapHighlightColor: 'transparent' }}
           >
-            <div className="relative flex items-center justify-center">
-              <img
-                src="/assets/figma/home_icon.svg"
-                className={navIconClass(activeTab === 'home')}
-                alt=""
-              />
+            <div className={navIconContainerClass(activeTab === 'home')}>
+              {getIcon('home')}
             </div>
             <span className={navTextClass(activeTab === 'home')}>Beranda</span>
           </button>
@@ -79,12 +94,8 @@ export default function BottomNav({ activeTab, onTabChange, onOpenAddPlot, urgen
             className="flex flex-col items-center justify-center flex-1 py-1 cursor-pointer group transition-transform active:scale-95"
             style={{ WebkitTapHighlightColor: 'transparent' }}
           >
-            <div className="relative flex items-center justify-center">
-              <img
-                src="/assets/figma/tanaman_icon.svg"
-                className={navIconClass(activeTab === 'plots')}
-                alt=""
-              />
+            <div className={navIconContainerClass(activeTab === 'plots')}>
+              {getIcon('plots')}
               {urgentCount > 0 && (
                 <span className="absolute -top-1.5 -right-2 bg-rose-500 text-white text-[9px] font-extrabold w-4 h-4 rounded-full flex items-center justify-center shadow-sm animate-pulse">
                   {urgentCount}
@@ -103,12 +114,8 @@ export default function BottomNav({ activeTab, onTabChange, onOpenAddPlot, urgen
             className="flex flex-col items-center justify-center flex-1 py-1 cursor-pointer group transition-transform active:scale-95"
             style={{ WebkitTapHighlightColor: 'transparent' }}
           >
-            <div className="relative flex items-center justify-center">
-              <img
-                src="/assets/figma/document_icon.svg"
-                className={navIconClass(activeTab === 'insights')}
-                alt=""
-              />
+            <div className={navIconContainerClass(activeTab === 'insights')}>
+              {getIcon('insights')}
             </div>
             <span className={navTextClass(activeTab === 'insights')}>Informasi</span>
           </button>
@@ -119,12 +126,8 @@ export default function BottomNav({ activeTab, onTabChange, onOpenAddPlot, urgen
             className="flex flex-col items-center justify-center flex-1 py-1 cursor-pointer group transition-transform active:scale-95"
             style={{ WebkitTapHighlightColor: 'transparent' }}
           >
-            <div className="relative flex items-center justify-center">
-              <img
-                src="/assets/figma/profile_icon.svg"
-                className={navIconClass(activeTab === 'profile')}
-                alt=""
-              />
+            <div className={navIconContainerClass(activeTab === 'profile')}>
+              {getIcon('profile')}
             </div>
             <span className={navTextClass(activeTab === 'profile')}>Profil</span>
           </button>
