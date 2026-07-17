@@ -41,6 +41,26 @@ export default function useGoraData() {
   const [newsList] = useState(INITIAL_NEWS);
   const [weather] = useState(WEATHER_PREVIEW);
 
+  const [streakInfo, setStreakInfo] = useState(() => {
+    const saved = localStorage.getItem('gora_streak_info');
+    if (saved) {
+      try { return JSON.parse(saved); } catch(e) {}
+    }
+    return { count: 3, lastActivityDate: null };
+  });
+
+  const syncStreakFromProfile = useCallback((profileData) => {
+    if (!profileData) return;
+    setStreakInfo(prev => {
+      const updated = {
+        count: profileData.streak_count ?? prev.count,
+        lastActivityDate: profileData.last_activity_date ?? prev.lastActivityDate
+      };
+      localStorage.setItem('gora_streak_info', JSON.stringify(updated));
+      return updated;
+    });
+  }, []);
+
   // Keep local storage strictly as a fast offline fallback cache
   useEffect(() => {
     localStorage.setItem('gora_plots', JSON.stringify(plots));
@@ -293,7 +313,7 @@ export default function useGoraData() {
 
   const logActivity = useCallback(async (activityData) => {
     const targetPlot = plots.find(p => p.id === activityData.plot_id);
-    if (!targetPlot) return;
+    if (!targetPlot) return { isFirstToday: false, previousCount: streakInfo.count, newCount: streakInfo.count };
     
     const now = new Date();
     const timeStr = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
@@ -337,7 +357,18 @@ export default function useGoraData() {
       setActivities(prev => [newActivity, ...prev]);
     }
 
-    fireIncrementStreak();
+    const today = new Date().toISOString().split('T')[0];
+    const isFirstToday = streakInfo.lastActivityDate !== today;
+    const previousCount = streakInfo.count;
+    let newCount = previousCount;
+
+    if (isFirstToday) {
+      newCount = previousCount + 1;
+      const updatedStreak = { count: newCount, lastActivityDate: today };
+      setStreakInfo(updatedStreak);
+      localStorage.setItem('gora_streak_info', JSON.stringify(updatedStreak));
+      fireIncrementStreak();
+    }
 
     setActions(prev => prev.map(a => {
       if (a.plot_id === targetPlot.id && a.activity_type === activityData.activity_type && a.status !== 'completed') {
@@ -389,7 +420,13 @@ export default function useGoraData() {
         if (error) console.warn('[logActivity] Supabase update plot error:', error);
       });
     }
-  }, [plots]);
+
+    return {
+      isFirstToday,
+      previousCount,
+      newCount
+    };
+  }, [plots, streakInfo]);
 
   const reportIssue = useCallback(async (issueData) => {
     const targetPlot = plots.find(p => p.id === issueData.plot_id);
@@ -509,6 +546,8 @@ export default function useGoraData() {
     activities,
     newsList,
     weather,
+    streakInfo,
+    syncStreakFromProfile,
     addPlot,
     completeAction,
     logActivity,

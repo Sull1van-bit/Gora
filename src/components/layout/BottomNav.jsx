@@ -7,7 +7,7 @@ import {
   RiAddLine
 } from 'react-icons/ri';
 
-export default function BottomNav({ activeTab, onTabChange, onOpenAddPlot, urgentCount = 0 }) {
+export default function BottomNav({ activeTab, onTabChange, onOpenAddPlot, onOpenLogObservation, urgentCount = 0 }) {
   const getIcon = (tab) => {
     const isActive = activeTab === tab;
     switch (tab) {
@@ -62,19 +62,16 @@ export default function BottomNav({ activeTab, onTabChange, onOpenAddPlot, urgen
         </div>
 
         
-        <div className="absolute -top-1 left-1/2 -translate-x-1/2 flex flex-col items-center justify-center z-10">
-          <div className="rounded-full bg-transparent p-1 shadow-[inset_0_2px_4px_rgba(0,0,0,0.3)]">
-             
-             <button
-              onClick={() => onOpenAddPlot ? onOpenAddPlot() : onTabChange('add-plot')}
-              className="w-[52px] h-[52px] rounded-full bg-[#5A843E] text-white flex items-center justify-center shadow-md active:scale-90 transition-all cursor-pointer group"
-              title="Tambah Tanaman"
-              aria-label="Tambah Tanaman"
-              style={{ WebkitTapHighlightColor: 'transparent' }}
-            >
-              <RiAddLine className="w-7 h-7 font-bold transition-transform duration-300" />
-            </button>
-          </div>
+        <div className="absolute -top-2 left-1/2 -translate-x-1/2 flex flex-col items-center justify-center z-20 pointer-events-auto">
+          <button
+            onClick={() => onOpenLogObservation ? onOpenLogObservation() : (onOpenAddPlot ? onOpenAddPlot() : onTabChange('log-observation'))}
+            className="w-[60px] h-[60px] rounded-full bg-[#5A843E] text-white flex items-center justify-center shadow-lg active:scale-90 transition-all cursor-pointer group border-4 border-[#f5f9ed]/90 select-none"
+            title="Log Harian"
+            aria-label="Log Harian"
+            style={{ WebkitTapHighlightColor: 'transparent' }}
+          >
+            <RiAddLine className="w-8 h-8 font-bold transition-transform duration-300 pointer-events-none" />
+          </button>
         </div>
 
         {/* Navigation Tabs Layer */}

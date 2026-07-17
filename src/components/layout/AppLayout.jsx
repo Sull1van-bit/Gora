@@ -8,6 +8,7 @@ export default function AppLayout({
   currentRoute,
   onTabChange, 
   onOpenAddPlot,
+  onOpenLogObservation,
   urgentCount = 0,
   headerTitle,
   headerSubtitle,
@@ -77,6 +78,7 @@ export default function AppLayout({
         activeTab={activeTab} 
         onTabChange={onTabChange} 
         onOpenAddPlot={onOpenAddPlot}
+        onOpenLogObservation={onOpenLogObservation}
         urgentCount={urgentCount} 
       />
     </div>

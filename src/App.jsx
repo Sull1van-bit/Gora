@@ -7,8 +7,10 @@ import InsightsPage from './pages/InsightsPage';
 import ProfilePage from './pages/ProfilePage';
 import LoginPage from './pages/LoginPage';
 import AddPlotModal from './components/plots/AddPlotModal';
+import LogObservationModal from './components/plots/LogObservationModal';
 import useGoraData from './hooks/useGoraData';
 import useAuth from './hooks/useAuth';
+import useProfile from './hooks/useProfile';
 import useUserLocation from './hooks/useUserLocation';
 import useWeather from './hooks/useWeather';
 import useNews from './hooks/useNews';
@@ -27,17 +29,27 @@ export default function App() {
     logActivity,
     reportIssue,
     resetDemoData,
+    streakInfo,
+    syncStreakFromProfile,
   } = useGoraData();
 
   const { latitude, longitude, provinsi, kecamatan, loading: locLoading, refetch: refetchLocation } = useUserLocation();
   const { weatherData: weather, loading: weatherLoading, hourlyForecast, weeklyForecast } = useWeather();
   const { newsList, loading: newsLoading } = useNews();
+  const { profile } = useProfile();
   const locationLabel = kecamatan && provinsi ? `${kecamatan}, ${provinsi}` : null;
 
   const [activeTab, setActiveTab] = useState('home');
   const [selectedPlotId, setSelectedPlotId] = useState(null);
   const [insightsTab, setInsightsTab] = useState('weather');
   const [isAddPlotModalOpen, setIsAddPlotModalOpen] = useState(false);
+  const [isLogObservationModalOpen, setIsLogObservationModalOpen] = useState(false);
+
+  useEffect(() => {
+    if (profile) {
+      syncStreakFromProfile(profile);
+    }
+  }, [profile, syncStreakFromProfile]);
 
   useEffect(() => {
     const handleHashChange = () => {
@@ -50,6 +62,8 @@ export default function App() {
         const sub = hash.split('/')[1];
         setInsightsTab(sub || 'weather');
         setActiveTab('insights');
+      } else if (hash === 'log-observation') {
+        setIsLogObservationModalOpen(true);
       } else if (['home', 'plots', 'insights', 'profile'].includes(hash)) {
         setActiveTab(hash);
         setSelectedPlotId(null);
@@ -63,6 +77,14 @@ export default function App() {
   }, []);
 
   const navigateTo = (tab, subParam = null) => {
+    if (tab === 'log-observation') {
+      setIsLogObservationModalOpen(true);
+      return;
+    }
+    if (tab === 'add-plot') {
+      setIsAddPlotModalOpen(true);
+      return;
+    }
     if (tab === 'plot-detail' && subParam) {
       window.location.hash = `plot/${subParam}`;
     } else if (tab === 'insights' && subParam) {
@@ -116,16 +138,11 @@ export default function App() {
   return (
     <>
       <AppLayout
-        activeTab={activeTab === 'plot-detail' ? 'plots' : activeTab}
+        activeTab={activeTab}
         currentRoute={activeTab}
-        onTabChange={(tab) => {
-          if (tab === 'add-plot') {
-            setIsAddPlotModalOpen(true);
-          } else {
-            navigateTo(tab);
-          }
-        }}
+        onTabChange={navigateTo}
         onOpenAddPlot={() => setIsAddPlotModalOpen(true)}
+        onOpenLogObservation={() => setIsLogObservationModalOpen(true)}
         urgentCount={urgentOrAttentionCount}
         {...getHeaderProps()}
       >
@@ -204,6 +221,14 @@ export default function App() {
         komoditasList={komoditasList}
         provinsi={provinsi}
         kecamatan={kecamatan}
+      />
+
+      <LogObservationModal
+        isOpen={isLogObservationModalOpen}
+        onClose={() => setIsLogObservationModalOpen(false)}
+        plots={plots}
+        onSaveObservation={logActivity}
+        streakCount={streakInfo.count}
       />
     </>
   );
