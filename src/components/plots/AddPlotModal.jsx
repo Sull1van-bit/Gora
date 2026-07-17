@@ -11,7 +11,6 @@ export default function AddPlotModal({ isOpen, onClose, onSave, komoditasList, p
     current_growth_stage: 'Vegetative (Pertumbuhan Daun)',
   });
 
-  // Auto populate location once detected if not modified by user
   useEffect(() => {
     if (provinsi && kecamatan && !formData.location) {
       setFormData(prev => ({ ...prev, location: `${kecamatan}, ${provinsi}` }));
@@ -39,7 +38,7 @@ export default function AddPlotModal({ isOpen, onClose, onSave, komoditasList, p
       <div
         className="bg-[#fbf9f3] w-full max-w-[380px] rounded-[25px] p-6 sm:p-7 shadow-2xl relative border border-[#e8e4d9] max-h-[92vh] overflow-y-auto text-[#3c3b3b]"
       >
-        {/* Top Header Row with Close Icon and Title */}
+        
         <div className="flex items-center justify-between mb-6 relative">
           <button
             onClick={onClose}
@@ -52,12 +51,12 @@ export default function AddPlotModal({ isOpen, onClose, onSave, komoditasList, p
           <h2 className="absolute inset-0 flex items-center justify-center font-['Montserrat_Alternates',sans-serif] font-bold text-[20px] text-[#3c3b3b] pointer-events-none">
             Lahan Baru
           </h2>
-          <div className="w-8" /> {/* Spacer for symmetry */}
+          <div className="w-8" /> 
         </div>
 
-        {/* Form Fields */}
+        
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Nama Lahan */}
+          
           <div>
             <label className="block font-['Montserrat_Alternates',sans-serif] font-medium text-[12px] text-[#3c3b3b] mb-1.5">
               Nama Lahan
@@ -72,7 +71,7 @@ export default function AddPlotModal({ isOpen, onClose, onSave, komoditasList, p
             />
           </div>
 
-          {/* Lokasi Lahan */}
+          
           <div>
             <label className="block font-['Montserrat_Alternates',sans-serif] font-medium text-[12px] text-[#3c3b3b] mb-1.5">
               Lokasi Lahan
@@ -92,7 +91,7 @@ export default function AddPlotModal({ isOpen, onClose, onSave, komoditasList, p
             </div>
           </div>
 
-          {/* Luas Lahan & Satuan */}
+          
           <div className="grid grid-cols-12 gap-3">
             <div className="col-span-7 sm:col-span-8">
               <label className="block font-['Montserrat_Alternates',sans-serif] font-medium text-[12px] text-[#3c3b3b] mb-1.5">
@@ -130,7 +129,7 @@ export default function AddPlotModal({ isOpen, onClose, onSave, komoditasList, p
             </div>
           </div>
 
-          {/* Jenis Tanaman */}
+          
           <div>
             <label className="block font-['Montserrat_Alternates',sans-serif] font-medium text-[12px] text-[#3c3b3b] mb-1.5">
               Jenis Tanaman
@@ -143,7 +142,7 @@ export default function AddPlotModal({ isOpen, onClose, onSave, komoditasList, p
               >
                 {komoditasList?.map((k) => (
                   <option key={k.id} value={k.id}>
-                    {k.icon} {k.nama}
+                    {k.nama}
                   </option>
                 ))}
               </select>
@@ -153,7 +152,7 @@ export default function AddPlotModal({ isOpen, onClose, onSave, komoditasList, p
             </div>
           </div>
 
-          {/* Tanggal Tanam */}
+          
           <div>
             <label className="block font-['Montserrat_Alternates',sans-serif] font-medium text-[12px] text-[#3c3b3b] mb-1.5">
               Tanggal Tanam
@@ -172,7 +171,7 @@ export default function AddPlotModal({ isOpen, onClose, onSave, komoditasList, p
             </div>
           </div>
 
-          {/* Action Button: Buat */}
+          
           <div className="pt-6 flex justify-center">
             <button
               type="submit"

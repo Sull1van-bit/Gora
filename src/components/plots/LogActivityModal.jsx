@@ -26,7 +26,6 @@ export default function LogActivityModal({ plot, isOpen, onClose, onLog }) {
       notes: notes,
     });
     onClose();
-    // Reset form
     setTitle('');
     setNotes('');
   };

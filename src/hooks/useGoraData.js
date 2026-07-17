@@ -9,6 +9,18 @@ import {
 } from '../services/dataStore';
 import { supabase } from '../lib/supabaseClient';
 
+async function fireIncrementStreak() {
+  if (!supabase) return;
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session?.user?.id) {
+      await supabase.rpc('increment_streak', { p_user_id: session.user.id });
+    }
+  } catch (err) {
+    console.warn('[streak] increment failed:', err.message);
+  }
+}
+
 export default function useGoraData() {
   const [plots, setPlots] = useState(() => {
     const saved = localStorage.getItem('gora_plots');
@@ -29,7 +41,6 @@ export default function useGoraData() {
   const [newsList] = useState(INITIAL_NEWS);
   const [weather] = useState(WEATHER_PREVIEW);
 
-  // Sync to local storage for persistence across reloads/offline sessions
   useEffect(() => {
     localStorage.setItem('gora_plots', JSON.stringify(plots));
   }, [plots]);
@@ -42,15 +53,12 @@ export default function useGoraData() {
     localStorage.setItem('gora_activities', JSON.stringify(activities));
   }, [activities]);
 
-  // Attempt to sync from Supabase if online and configured
   useEffect(() => {
     async function fetchSupabasePlots() {
       if (!supabase) return;
       try {
         const { data, error } = await supabase.from('plots').select('*');
         if (!error && data && data.length > 0) {
-          // Merge or supplement local plots with Supabase rows if available
-          // For now, we maintain smooth local UX while allowing background sync
         }
       } catch (err) {
         console.warn('[useGoraData] Supabase sync fallback to local store:', err);
@@ -59,15 +67,12 @@ export default function useGoraData() {
     fetchSupabasePlots();
   }, []);
 
-  // Complete an action -> update status & record activity
   const completeAction = useCallback((actionId) => {
     const targetAction = actions.find(a => a.id === actionId);
     if (!targetAction) return;
 
-    // 1. Mark action completed
     setActions(prev => prev.map(a => a.id === actionId ? { ...a, status: 'completed' } : a));
 
-    // 2. Add activity record
     const now = new Date();
     const timeStr = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
     const newActivity = {
@@ -82,11 +87,10 @@ export default function useGoraData() {
       timestamp: now.toISOString(),
     };
     setActivities(prev => [newActivity, ...prev]);
+    fireIncrementStreak();
 
-    // 3. Check if all overdue/today actions for this plot are completed -> if yes, update plot status to ontrack
     setPlots(prevPlots => prevPlots.map(p => {
       if (p.id === targetAction.plot_id) {
-        // Find remaining pending actions for this plot
         const remainingActions = actions.filter(
           a => a.plot_id === p.id && a.id !== actionId && a.status !== 'completed'
         );
@@ -121,7 +125,6 @@ export default function useGoraData() {
     }));
   }, [actions]);
 
-  // Add a new plot
   const addPlot = useCallback((newPlotData) => {
     const kom = komoditasList.find(k => k.id === newPlotData.komoditas_id) || komoditasList[0];
     const newPlot = {
@@ -148,7 +151,6 @@ export default function useGoraData() {
     return newPlot;
   }, [komoditasList]);
 
-  // Log activity explicitly
   const logActivity = useCallback((activityData) => {
     const targetPlot = plots.find(p => p.id === activityData.plot_id);
     if (!targetPlot) return;
@@ -169,8 +171,8 @@ export default function useGoraData() {
     };
 
     setActivities(prev => [newActivity, ...prev]);
+    fireIncrementStreak();
 
-    // Complete matching action if exists
     setActions(prev => prev.map(a => {
       if (a.plot_id === targetPlot.id && a.activity_type === activityData.activity_type && a.status !== 'completed') {
         return { ...a, status: 'completed' };
@@ -178,7 +180,6 @@ export default function useGoraData() {
       return a;
     }));
 
-    // Update plot timestamps & status
     setPlots(prev => prev.map(p => {
       if (p.id === targetPlot.id) {
         return {
@@ -195,7 +196,6 @@ export default function useGoraData() {
     }));
   }, [plots]);
 
-  // Report issue
   const reportIssue = useCallback((issueData) => {
     const targetPlot = plots.find(p => p.id === issueData.plot_id);
     if (!targetPlot) return;
@@ -220,7 +220,6 @@ export default function useGoraData() {
     setActivities(prev => [newActivity, ...prev]);
 
     if (isUrgent) {
-      // Add urgent action
       const newAction = {
         id: `act-${Date.now()}`,
         plot_id: targetPlot.id,
@@ -236,7 +235,6 @@ export default function useGoraData() {
       setActions(prev => [newAction, ...prev]);
     }
 
-    // Update plot status
     setPlots(prev => prev.map(p => {
       if (p.id === targetPlot.id) {
         return {

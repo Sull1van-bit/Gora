@@ -1,4 +1,3 @@
-// Initial realistic seed data for GORA mobile farming app
 export const INITIAL_KOMODITAS = [
   { id: 'kom-1', nama: 'Tomat (Tomato)', satuan: 'kg', icon: 'tomato', avgPrice: 12000, trend: 'up', color: 'bg-rose-500 text-white' },
   { id: 'kom-2', nama: 'Cabai Merah (Chili)', satuan: 'kg', icon: 'chili', avgPrice: 35000, trend: 'down', color: 'bg-red-600 text-white' },
@@ -21,7 +20,7 @@ export const INITIAL_PLOTS = [
     estimated_harvest_date: '2026-08-25',
     current_growth_stage: 'Flowering (Berbunga)',
     growth_progress: 65,
-    status: 'urgent', // 'urgent' | 'attention' | 'ontrack'
+    status: 'urgent',
     status_text: 'Penyiraman tertunda (Watering overdue)',
     priority_score: 95,
     last_watered: '2 hari lalu',
@@ -95,7 +94,7 @@ export const INITIAL_ACTIONS = [
     komoditas_icon: 'tomato',
     title: 'Siram Tanaman (Watering)',
     description: 'Kelembaban tanah di bawah 40%. Segera lakukan penyiraman pagi/sore.',
-    status: 'overdue', // 'overdue' | 'today' | 'soon' | 'completed'
+    status: 'overdue',
     due_text: 'Terlewat 1 hari (Overdue)',
     priority: 'high',
     activity_type: 'Watering',

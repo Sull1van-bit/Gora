@@ -1,5 +1,5 @@
 import React from 'react';
-import UniversalIcon from '../../utils/iconHelper';
+import { RiLeafFill, RiPlantFill, RiSeedlingFill } from 'react-icons/ri';
 
 export default function PlotCardFull({ plot, onSelect }) {
   const getStatusBadge = (status) => {
@@ -31,7 +31,7 @@ export default function PlotCardFull({ plot, onSelect }) {
       onClick={() => onSelect(plot.id)}
       className="bg-[#fbf9f3] rounded-[20px] shadow-[0px_0px_4px_rgba(0,0,0,0.08)] border border-[#e8e4d9] overflow-hidden cursor-pointer active:scale-[0.99] transition-all relative select-none"
     >
-      {/* Top Image Banner */}
+      
       <div className="h-[98px] sm:h-[110px] w-full relative">
         <img 
           src={plot.image_url || '/assets/figma/image9.png'} 
@@ -40,14 +40,19 @@ export default function PlotCardFull({ plot, onSelect }) {
         />
       </div>
 
-      {/* Overlapping Circular Commodity Badge */}
-      <div className="size-[55px] bg-[#fbf9f3] rounded-full absolute top-[70px] sm:top-[82px] left-[10px] shadow-[0px_2px_4px_rgba(0,0,0,0.1)] flex items-center justify-center z-10 border-2 border-[#fbf9f3]">
-        <UniversalIcon icon={plot.komoditas_icon || 'rice'} className="w-7 h-7 text-emerald-600" />
+      
+      <div className="size-[55px] bg-[#fbf9f3] rounded-full absolute top-[70px] sm:top-[82px] left-[10px] shadow-[0px_2px_4px_rgba(0,0,0,0.1)] flex items-center justify-center z-10 border-2 border-[#fbf9f3] text-emerald-600">
+        <span className="text-[28px] leading-none select-none flex items-center justify-center">
+          {plot.komoditas_nama?.includes('Tomat') ? <RiPlantFill /> :
+           plot.komoditas_nama?.includes('Cabai') ? <RiLeafFill /> :
+           plot.komoditas_nama?.includes('Padi') ? <RiSeedlingFill /> :
+           <RiLeafFill />}
+        </span>
       </div>
 
-      {/* Card Body */}
+      
       <div className="pt-2.5 pb-4 px-4 relative">
-        {/* Title, Commodity & Status Row */}
+        
         <div className="pl-[68px] flex items-start justify-between min-h-[40px]">
           <div>
             <div className="flex items-center gap-1.5 flex-wrap">
@@ -60,7 +65,7 @@ export default function PlotCardFull({ plot, onSelect }) {
               </p>
             </div>
 
-            {/* Harvest Countdown */}
+            
             <div className="flex items-center gap-1.5 mt-1.5">
               <img src="/assets/figma/plots/calendar_icon.svg" className="w-[11px] h-[11px] shrink-0" alt="" />
               <p className="font-['Montserrat_Alternates',sans-serif] font-medium text-[#8f8e94] text-[10px]">
@@ -69,13 +74,13 @@ export default function PlotCardFull({ plot, onSelect }) {
             </div>
           </div>
 
-          {/* Status Badge */}
+          
           <div className={`${statusBadge.bgClass} px-2.5 py-1 rounded-full text-[9px] font-['Montserrat_Alternates',sans-serif] font-medium shrink-0 ml-2 shadow-2xs`}>
             {statusBadge.label}
           </div>
         </div>
 
-        {/* Progress Section */}
+        
         <div className="mt-3.5 space-y-1.5">
           <div className="flex items-center justify-between w-full">
             <p className="font-['Montserrat_Alternates',sans-serif] font-semibold text-[#3c3b3b] text-[11px]">
