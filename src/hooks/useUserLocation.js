@@ -2,9 +2,11 @@ import { useState, useEffect, useCallback } from 'react';
 import { Geolocation } from '@capacitor/geolocation';
 
 /**
- * @returns {{ provinsi: string|null, kecamatan: string|null, loading: boolean, error: string|null, refetch: () => void }}
+ * @returns {{ latitude: number|null, longitude: number|null, provinsi: string|null, kecamatan: string|null, loading: boolean, error: string|null, refetch: () => void }}
  */
 export default function useUserLocation() {
+  const [latitude, setLatitude] = useState(null);
+  const [longitude, setLongitude] = useState(null);
   const [provinsi, setProvinsi] = useState(null);
   const [kecamatan, setKecamatan] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -29,10 +31,12 @@ export default function useUserLocation() {
         timeout: 10000,
       });
 
-      const { latitude, longitude } = position.coords;
+      const { latitude: lat, longitude: lon } = position.coords;
+      setLatitude(lat);
+      setLongitude(lon);
 
       const response = await fetch(
-        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=14&addressdetails=1&accept-language=id`,
+        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=14&addressdetails=1&accept-language=id`,
         {
           headers: {
             'User-Agent': 'GoraApp/1.0 (contact@garuda.com)',
@@ -62,6 +66,8 @@ export default function useUserLocation() {
     } catch (err) {
       console.warn('[useUserLocation]', err);
       setError(err.message || 'Tidak dapat mendeteksi lokasi.');
+      setLatitude(null);
+      setLongitude(null);
       setProvinsi(null);
       setKecamatan(null);
     } finally {
@@ -74,6 +80,8 @@ export default function useUserLocation() {
   }, [fetchLocation]);
 
   return {
+    latitude,
+    longitude,
     provinsi,
     kecamatan,
     loading,

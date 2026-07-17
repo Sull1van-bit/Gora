@@ -1,4 +1,5 @@
 import React from 'react';
+import UniversalIcon from '../../utils/iconHelper';
 
 export default function WeatherDetailView({ weather, hourlyForecast, weeklyForecast, locationLabel }) {
   const fallbackHourly = [
@@ -35,7 +36,9 @@ export default function WeatherDetailView({ weather, hourlyForecast, weeklyForec
               {weather?.condition || 'Cerah Berawan'}
             </h2>
           </div>
-          <span className="text-5xl shrink-0">{weather?.icon || '🌤️'}</span>
+          <span className="shrink-0 flex items-center justify-center">
+            <UniversalIcon icon={weather?.icon || 'partly_cloudy'} className="w-12 h-12 text-white" />
+          </span>
         </div>
 
         <div className="flex items-baseline gap-3 my-2">
@@ -82,7 +85,9 @@ export default function WeatherDetailView({ weather, hourlyForecast, weeklyForec
           {hourlyToShow.map((h, i) => (
             <div key={i} className="bg-slate-50 p-2.5 rounded-xl border border-slate-100/80">
               <span className="text-[11px] text-slate-400 font-medium block">{h.time}</span>
-              <span className="text-2xl my-1 block">{h.icon}</span>
+              <span className="my-1.5 flex items-center justify-center">
+                <UniversalIcon icon={h.icon} className="w-6 h-6 text-slate-700 block mx-auto" />
+              </span>
               <span className="text-sm font-extrabold text-slate-800 block">{h.temp}°C</span>
               <span className="text-[10px] text-slate-500">{h.label}</span>
             </div>
@@ -99,7 +104,9 @@ export default function WeatherDetailView({ weather, hourlyForecast, weeklyForec
           {weeklyToShow.map((w, idx) => (
             <div key={idx} className="py-2.5 flex items-center justify-between text-xs">
               <div className="flex items-center gap-2 w-1/3">
-                <span className="text-lg">{w.icon}</span>
+                <span className="shrink-0 flex items-center justify-center">
+                  <UniversalIcon icon={w.icon} className="w-5 h-5 text-blue-600" />
+                </span>
                 <span className="font-bold text-slate-800">{w.day}</span>
               </div>
               <div className="w-1/3 text-center text-slate-500 font-medium truncate">
