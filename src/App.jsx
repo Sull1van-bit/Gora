@@ -44,6 +44,8 @@ export default function App() {
   const [insightsTab, setInsightsTab] = useState('weather');
   const [isAddPlotModalOpen, setIsAddPlotModalOpen] = useState(false);
   const [isLogObservationModalOpen, setIsLogObservationModalOpen] = useState(false);
+  const [logObservationInitialPlotId, setLogObservationInitialPlotId] = useState(null);
+  const [logObservationInitialStep, setLogObservationInitialStep] = useState(1);
 
   useEffect(() => {
     if (profile) {
@@ -142,7 +144,11 @@ export default function App() {
         currentRoute={activeTab}
         onTabChange={navigateTo}
         onOpenAddPlot={() => setIsAddPlotModalOpen(true)}
-        onOpenLogObservation={() => setIsLogObservationModalOpen(true)}
+        onOpenLogObservation={() => {
+          setLogObservationInitialPlotId(null);
+          setLogObservationInitialStep(1);
+          setIsLogObservationModalOpen(true);
+        }}
         urgentCount={urgentOrAttentionCount}
         {...getHeaderProps()}
       >
@@ -187,6 +193,11 @@ export default function App() {
             onLogActivity={logActivity}
             onReportIssue={reportIssue}
             onBack={() => navigateTo('plots')}
+            onOpenLogObservation={(plotId, step = 2) => {
+              setLogObservationInitialPlotId(plotId);
+              setLogObservationInitialStep(step);
+              setIsLogObservationModalOpen(true);
+            }}
           />
         )}
 
@@ -229,6 +240,8 @@ export default function App() {
         plots={plots}
         onSaveObservation={logActivity}
         streakCount={streakInfo.count}
+        initialPlotId={logObservationInitialPlotId}
+        initialStep={logObservationInitialStep}
       />
     </>
   );

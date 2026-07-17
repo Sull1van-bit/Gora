@@ -227,9 +227,8 @@ export default function HomePage({
           onMouseUp={handleMouseUpOrLeave}
           onMouseLeave={handleMouseUpOrLeave}
           style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-          className={`flex gap-2 overflow-x-auto pb-2 scrollbar-none snap-x snap-mandatory [&::-webkit-scrollbar]:hidden select-none ${
-            isDragging ? 'cursor-grabbing !snap-none' : 'cursor-grab'
-          }`}
+          className={`flex gap-2 overflow-x-auto pb-2 scrollbar-none snap-x snap-mandatory [&::-webkit-scrollbar]:hidden select-none ${isDragging ? 'cursor-grabbing !snap-none' : 'cursor-grab'
+            }`}
         >
           {plotsToShow.map((plot) => (
             <div key={plot.id} className="snap-start shrink-0">
@@ -261,8 +260,8 @@ export default function HomePage({
                 key={idx}
                 onClick={() => scrollToPlot(idx)}
                 className={`h-1.5 rounded-full transition-all duration-300 ${activePlotIndex === idx
-                    ? 'w-5 bg-[#28502d]'
-                    : 'w-1.5 bg-slate-300 hover:bg-slate-400'
+                  ? 'w-5 bg-[#28502d]'
+                  : 'w-1.5 bg-slate-300 hover:bg-slate-400'
                   }`}
                 aria-label={`Plot ${idx + 1}`}
               />
@@ -340,10 +339,10 @@ export default function HomePage({
             <div className="flex flex-col  sm:gap-2">
               <div className="text-[12px] sm:text-[11px] font-['Montserrat_Alternates',sans-serif] font-semibold text-[#3c3b3b] leading-snug min-w-0">
                 Tomat tumbuh
-                <br /> 
+                <br />
                 <span className="text-[#578a3e] font-bold">
                   3% lebih cepat
-                </span> 
+                </span>
                 <br />
                 dari minggu ke-1
               </div>
@@ -409,9 +408,9 @@ export default function HomePage({
                 </p>
               </div>
             </div>
-            
 
-            
+
+
           </div>
 
           {/* Pasar Card */}

@@ -103,7 +103,7 @@ const PlantGraphic = ({ stageIndex }) => {
   );
 };
 
-export default function PlotDetailProgress({ plot, progressPct, setIsLogOpen }) {
+export default function PlotDetailProgress({ plot, progressPct, setIsLogOpen, onOpenLogObservation }) {
   const defaultStages = [
     {id: "seed", name: "Semai", days: 14},
     {id: "sprout", name: "Tunas", days: 14},
@@ -181,8 +181,14 @@ export default function PlotDetailProgress({ plot, progressPct, setIsLogOpen }) 
       </div>
       
       <button
-        onClick={() => setIsLogOpen(true)}
-        className="mt-5 bg-[#438347] hover:bg-[#366c3a] active:scale-95 text-white font-['Montserrat_Alternates',sans-serif] font-semibold text-[12px] px-8 py-2.5 rounded-full shadow-md transition-all flex items-center gap-2"
+        onClick={() => {
+          if (onOpenLogObservation) {
+            onOpenLogObservation(plot?.id, 2);
+          } else {
+            setIsLogOpen(true);
+          }
+        }}
+        className="mt-5 bg-[#438347] hover:bg-[#366c3a] active:scale-95 text-white font-['Montserrat_Alternates',sans-serif] font-semibold text-[12px] px-8 py-2.5 rounded-full shadow-md transition-all flex items-center gap-2 cursor-pointer"
       >
         <span>Update Kondisi Lahan</span>
       </button>
