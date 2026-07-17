@@ -8,7 +8,7 @@ import ProfileLocation from '../components/profile/ProfileLocation';
 import ProfilePreferences from '../components/profile/ProfilePreferences';
 import ProfileAbout from '../components/profile/ProfileAbout';
 
-export default function ProfilePage({ plots, onSignOut }) {
+export default function ProfilePage({ plots, onSignOut, onResetDemoData }) {
   const { kecamatan, kota, provinsi, refetch: refetchLocation } = useUserLocation();
   const { profile, loading: profileLoading, updateProfile } = useProfile();
   const { streakCount, longestStreak, lastActivityDate, isActiveToday, streakStatus, syncFromProfile } = useStreak(profile);
@@ -60,7 +60,7 @@ export default function ProfilePage({ plots, onSignOut }) {
         setLanguage={setLanguage} 
       />
 
-      <ProfileAbout onSignOut={onSignOut} />
+      <ProfileAbout onSignOut={onSignOut} onResetDemoData={onResetDemoData} />
     </div>
   );
 }

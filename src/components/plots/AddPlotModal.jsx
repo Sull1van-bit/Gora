@@ -1,9 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import useUserLocation from '../../hooks/useUserLocation';
 
-export default function AddPlotModal({ isOpen, onClose, onSave, komoditasList }) {
-  const { provinsi, kecamatan } = useUserLocation();
-
+export default function AddPlotModal({ isOpen, onClose, onSave, komoditasList, provinsi, kecamatan }) {
   const [formData, setFormData] = useState({
     plot_name: '',
     komoditas_id: komoditasList?.[0]?.id || 'kom-1',
@@ -27,18 +24,18 @@ export default function AddPlotModal({ isOpen, onClose, onSave, komoditasList })
     if (!formData.plot_name) return;
     onSave({
       ...formData,
-      area: formData.unit === 'Hektar' 
-        ? Number(formData.area) * 10000 
-        : formData.unit === 'Are' 
-        ? Number(formData.area) * 100 
-        : Number(formData.area)
+      area: formData.unit === 'Hektar'
+        ? Number(formData.area) * 10000
+        : formData.unit === 'Are'
+          ? Number(formData.area) * 100
+          : Number(formData.area)
     });
     onClose();
   };
 
   return (
     <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 animate-fade-in">
-      <div 
+      <div
         className="bg-[#fbf9f3] w-full max-w-[380px] rounded-[25px] p-6 sm:p-7 shadow-2xl relative border border-[#e8e4d9] max-h-[92vh] overflow-y-auto text-[#3c3b3b]"
       >
         

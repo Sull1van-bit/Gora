@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { RiErrorWarningLine, RiCloseLine } from 'react-icons/ri';
+import UniversalIcon from '../../utils/iconHelper';
 
 export default function ReportIssueModal({ plot, isOpen, onClose, onReport }) {
   const [title, setTitle] = useState('');
@@ -8,9 +10,9 @@ export default function ReportIssueModal({ plot, isOpen, onClose, onReport }) {
   if (!isOpen || !plot) return null;
 
   const severityLevels = [
-    { id: 'Low', label: '🟢 Rendah (Monitor rutin, tidak mendesak)', color: 'border-emerald-300 bg-emerald-50 text-emerald-800' },
-    { id: 'Medium', label: '🟡 Sedang (Perlu penanganan dalam 2-3 hari)', color: 'border-amber-300 bg-amber-50 text-amber-800' },
-    { id: 'High', label: '🔴 Urgent / Tinggi (Segera tindak lanjuti hari ini!)', color: 'border-rose-400 bg-rose-50 text-rose-800 font-bold' },
+    { id: 'Low', label: 'Rendah (Monitor rutin, tidak mendesak)', color: 'border-emerald-300 bg-emerald-50 text-emerald-800' },
+    { id: 'Medium', label: 'Sedang (Perlu penanganan dalam 2-3 hari)', color: 'border-amber-300 bg-amber-50 text-amber-800' },
+    { id: 'High', label: 'Urgent / Tinggi (Segera tindak lanjuti hari ini!)', color: 'border-rose-400 bg-rose-50 text-rose-800 font-bold' },
   ];
 
   const handleSubmit = (e) => {
@@ -36,17 +38,19 @@ export default function ReportIssueModal({ plot, isOpen, onClose, onReport }) {
         <div className="flex items-center justify-between border-b border-slate-100 pb-4 mb-5">
           <div>
             <h2 className="text-lg font-black text-rose-700 font-['Montserrat_Alternates',sans-serif] flex items-center gap-1.5">
-              <span>⚠️</span> Lapor Masalah Lahan
+              <RiErrorWarningLine className="w-5 h-5 shrink-0 text-rose-600" />
+              <span>Lapor Masalah Lahan</span>
             </h2>
-            <p className="text-xs text-slate-500 font-medium">
-              {plot.komoditas_icon} {plot.plot_name}
-            </p>
+            <div className="flex items-center gap-1 text-xs text-slate-500 font-medium mt-1">
+              <UniversalIcon icon={plot.komoditas_icon || 'rice'} className="w-4 h-4 text-emerald-600 shrink-0" />
+              <span>{plot.plot_name}</span>
+            </div>
           </div>
           <button
             onClick={onClose}
             className="w-8 h-8 rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 flex items-center justify-center font-bold"
           >
-            ✕
+            <RiCloseLine className="w-5 h-5" />
           </button>
         </div>
 

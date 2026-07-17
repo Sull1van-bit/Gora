@@ -9,6 +9,7 @@ import LoginPage from './pages/LoginPage';
 import AddPlotModal from './components/plots/AddPlotModal';
 import useGoraData from './hooks/useGoraData';
 import useAuth from './hooks/useAuth';
+import useUserLocation from './hooks/useUserLocation';
 import useWeather from './hooks/useWeather';
 import useNews from './hooks/useNews';
 import { RiLoader4Line } from 'react-icons/ri';
@@ -25,10 +26,13 @@ export default function App() {
     addPlot,
     logActivity,
     reportIssue,
+    resetDemoData,
   } = useGoraData();
 
-  const { weatherData: weather, loading: weatherLoading } = useWeather();
+  const { latitude, longitude, provinsi, kecamatan, loading: locLoading, refetch: refetchLocation } = useUserLocation();
+  const { weatherData: weather, loading: weatherLoading, hourlyForecast, weeklyForecast } = useWeather();
   const { newsList, loading: newsLoading } = useNews();
+  const locationLabel = kecamatan && provinsi ? `${kecamatan}, ${provinsi}` : null;
 
   const [activeTab, setActiveTab] = useState('home');
   const [selectedPlotId, setSelectedPlotId] = useState(null);
@@ -68,8 +72,8 @@ export default function App() {
     }
   };
 
-  const urgentOrAttentionCount = plots.filter(p => p.status === 'urgent').length + 
-                                 actions.filter(a => a.status === 'overdue').length;
+  const urgentOrAttentionCount = plots.filter(p => p.status === 'urgent').length +
+    actions.filter(a => a.status === 'overdue').length;
 
   const getHeaderProps = () => {
     switch (activeTab) {
@@ -138,6 +142,9 @@ export default function App() {
             onSelectPlot={(id) => navigateTo('plot-detail', id)}
             onNavigateTab={navigateTo}
             onOpenAddPlot={() => setIsAddPlotModalOpen(true)}
+            provinsi={provinsi}
+            kecamatan={kecamatan}
+            locLoading={locLoading}
           />
         )}
 
@@ -168,6 +175,9 @@ export default function App() {
         {activeTab === 'insights' && (
           <InsightsPage
             weather={weather}
+            hourlyForecast={hourlyForecast}
+            weeklyForecast={weeklyForecast}
+            locationLabel={locationLabel}
             newsList={newsList}
             newsLoading={newsLoading}
             initialTab={insightsTab}
@@ -175,7 +185,14 @@ export default function App() {
         )}
 
         {activeTab === 'profile' && (
-          <ProfilePage plots={plots} onSignOut={signOut} />
+          <ProfilePage 
+            plots={plots} 
+            onSignOut={signOut} 
+            onResetDemoData={resetDemoData}
+            provinsi={provinsi}
+            kecamatan={kecamatan}
+            refetchLocation={refetchLocation}
+          />
         )}
       </AppLayout>
 
@@ -184,6 +201,8 @@ export default function App() {
         onClose={() => setIsAddPlotModalOpen(false)}
         onSave={addPlot}
         komoditasList={komoditasList}
+        provinsi={provinsi}
+        kecamatan={kecamatan}
       />
     </>
   );
