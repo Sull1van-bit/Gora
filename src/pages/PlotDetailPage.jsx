@@ -57,7 +57,7 @@ export default function PlotDetailPage({
   const daysToHarvest = plot.days_to_harvest || 28;
 
   return (
-    <div className="animate-fade-in pb-24 space-y-0 text-[#3c3b3b]">
+    <div className="animate-fade-in pb-24 text-[#3c3b3b]">
       <PlotDetailHeader plot={plot} onBack={onBack} />
       
       <PlotDetailProgress 

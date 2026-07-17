@@ -1,6 +1,15 @@
 import React from 'react';
 
 export default function PlotDetailHarvest({ plot, daysToHarvest }) {
+  const formatDate = (dateStr, fallback = '-') => {
+    if (!dateStr) return fallback;
+    
+    const [year, month, day] = dateStr.split('-');
+    if (!year || !month || !day) return dateStr; // format nggak dikenali, tampilkan mentah
+    
+    return `${day}/${month}/${year}`;
+  };
+
   return (
     <section className="mx-4 mt-3 bg-[#fbf9f3] rounded-[10px] px-5 py-3.5 shadow-[0px_2px_1px_rgba(0,0,0,0.1)] border border-slate-100/60">
       <div className="flex items-center justify-around relative">
@@ -10,7 +19,7 @@ export default function PlotDetailHarvest({ plot, daysToHarvest }) {
             Tanggal Tanam
           </span>
           <span className="font-['Montserrat_Alternates',sans-serif] font-semibold text-[18px] sm:text-[20px] text-[#28502d] tracking-[1px] mt-1">
-            {plot.planting_date || '08/01/2026'}
+            {formatDate(plot.planting_date, '01/08/2026')}
           </span>
         </div>
 
@@ -25,7 +34,7 @@ export default function PlotDetailHarvest({ plot, daysToHarvest }) {
             Estimasi Panen
           </span>
           <span className="font-['Montserrat_Alternates',sans-serif] font-semibold text-[18px] sm:text-[20px] text-[#28502d] tracking-[1px] mt-1">
-            {plot.estimated_harvest_date || '08/12/2026'}
+            {formatDate(plot.estimated_harvest_date, '12/08/2026')}
           </span>
         </div>
       </div>
