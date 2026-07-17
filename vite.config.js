@@ -9,5 +9,14 @@ export default defineConfig({
   build: {
     outDir: 'dist',
   },
+  server: {
+    proxy: {
+      '/api/jakpost': {
+        target: 'https://jakpost.vercel.app',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/jakpost/, '/api')
+      }
+    }
+  }
 })
 

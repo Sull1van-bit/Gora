@@ -1,127 +1,189 @@
-import React, { useState, useEffect } from 'react';
-import { supabase } from '../lib/supabaseClient';
+import React, { useState } from 'react';
+import useMarketPrices from '../hooks/useMarketPrices';
+import useUserLocation from '../hooks/useUserLocation';
+import { INITIAL_KOMODITAS } from '../services/dataStore';
+import { RiMapPin2Fill, RiLoader4Line, RiLineChartLine, RiGlobalLine, RiTimeLine, RiRefreshLine, RiSearchLine, RiCloseLine, RiLightbulbFlashLine, RiBox3Line, RiLeafFill, RiPlantFill, RiSeedlingFill } from 'react-icons/ri';
+
+const FALLBACK_PRICES = INITIAL_KOMODITAS.map((k) => ({
+  id: k.id,
+  nama: k.nama,
+  harga: k.avgPrice,
+  satuan: k.satuan,
+  icon: k.icon,
+  perubahan: k.trend === 'up' ? 5.0 : k.trend === 'down' ? -5.0 : 0,
+  wilayah: 'Pasar Induk (Data Referensi)',
+}));
+
+function TrendArrow({ perubahan }) {
+  if (perubahan == null) return null;
+  const n = Number(perubahan);
+  if (n > 0) return <span className="ml-1 text-emerald-500 font-bold">↑ {n.toFixed(1)}%</span>;
+  if (n < 0) return <span className="ml-1 text-rose-500 font-bold">↓ {Math.abs(n).toFixed(1)}%</span>;
+  return <span className="ml-1 text-slate-400">→</span>;
+}
 
 export default function HargaKomoditas() {
-    const [dataHarga, setDataHarga] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [waktuUpdate, setWaktuUpdate] = useState('');
-    const [errorMsg, setErrorMsg] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
 
-    const ambilData = async () => {
-        try {
-            setErrorMsg('');
-            const today = new Date().toISOString().split('T')[0];
+  const {
+    lat, lon,
+    kecamatan, kota, provinsi,
+    loading: locLoading,
+    error: locError,
+  } = useUserLocation();
 
-            const { data, error } = await supabase
-                .from('harga_harian')
-                .select(`
-                    id,
-                    harga,
-                    tanggal,
-                    komoditas:komoditas_id ( nama, satuan ),
-                    wilayah:wilayah_id ( provinsi, kota, kecamatan )
-                `)
-                .eq('tanggal', today)
-                .order('harga', { ascending: false });
+  const {
+    prices,
+    nearestWilayah,
+    loading: pricesLoading,
+    error: pricesError,
+    lastUpdated,
+    refetch,
+  } = useMarketPrices({ lat, lon });
 
-            if (error) throw error;
+  const loading = locLoading || pricesLoading;
+  const isFallback = prices.length === 0 && !pricesLoading;
+  const dataHarga = isFallback ? FALLBACK_PRICES : prices;
 
-            if (data && data.length > 0) {
-                const uniqueData = [];
-                const seen = new Set();
-                
-                data.forEach((row, idx) => {
-                    const nama = row.komoditas?.nama || 'Tidak diketahui';
-                    if (!seen.has(nama)) {
-                        seen.add(nama);
-                        uniqueData.push({
-                            id: row.id || idx,
-                            nama,
-                            harga: row.harga,
-                            satuan: row.komoditas?.satuan || 'kg',
-                            wilayah: row.wilayah
-                                ? `${row.wilayah.kecamatan}, ${row.wilayah.kota}`
-                                : 'Tidak diketahui',
-                        });
-                    }
-                });
-                setDataHarga(uniqueData);
-            } else {
-                setDataHarga([]);
-                setErrorMsg('Data untuk hari ini belum tersedia di database.');
-            }
+  const filteredHarga = dataHarga.filter(
+    (item) =>
+      item.nama.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (item.wilayah && item.wilayah.toLowerCase().includes(searchQuery.toLowerCase()))
+  );
 
-            setWaktuUpdate(new Date().toLocaleTimeString('id-ID'));
-        } catch (err) {
-            console.error('[HargaKomoditas] Error fetch data:', err.message);
-            setErrorMsg(`Gagal memuat data: ${err.message}`);
-            setDataHarga([]);
-        } finally {
-            setLoading(false);
-        }
-    };
+  const waktuUpdate = lastUpdated
+    ? lastUpdated.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
+    : null;
 
-    useEffect(() => {
-        ambilData();
-    }, []);
+  const lokasiLabel = nearestWilayah
+    ? `${nearestWilayah.nama_pasar ?? [nearestWilayah.kecamatan, nearestWilayah.kota].filter(Boolean).join(', ')} (${nearestWilayah.jarak_km?.toFixed(1)} km)`
+    : !locLoading && !locError && (kecamatan || kota || provinsi)
+    ? [kecamatan, kota, provinsi].filter(Boolean).join(', ')
+    : null;
 
-    if (loading) {
-        return (
-            <div className="w-full max-w-4xl p-6 mx-auto text-center text-slate-500 font-medium">
-                Memuat data...
-            </div>
-        );
-    }
-
+  if (loading) {
     return (
-        <div className="w-full max-w-4xl p-6 bg-white rounded-xl shadow-md border border-slate-100">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between border-b border-slate-100 pb-4 mb-4">
-                <div>
-                    <h2 className="text-xl font-bold text-slate-800">Market Insight</h2>
-                </div>
-                <div className="flex items-center gap-2 mt-2 sm:mt-0">
-                    {waktuUpdate && (
-                        <span className="text-xs font-medium text-slate-500 bg-slate-100 px-3 py-1 rounded-full">
-                            {waktuUpdate} WIB
-                        </span>
-                    )}
-                </div>
-            </div>
-
-            {errorMsg && (
-                <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-xs text-red-700 flex items-center justify-between">
-                    <span>{errorMsg}</span>
-                    <button
-                        onClick={() => { setLoading(true); ambilData(); }}
-                        className="underline font-semibold hover:text-red-900"
-                    >
-                        Coba Lagi
-                    </button>
-                </div>
-            )}
-
-            <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse">
-                    <thead>
-                        <tr className="border-b border-slate-200 bg-slate-50">
-                            <th className="p-3 text-sm font-semibold text-slate-600">Nama Komoditas</th>
-                            <th className="p-3 text-sm font-semibold text-slate-600">Satuan</th>
-                            <th className="p-3 text-sm font-semibold text-slate-600 text-right">Harga</th>
-                        </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100">
-                        {dataHarga.map((item, indeks) => (
-                            <tr key={item.id || indeks} className="hover:bg-slate-50/50 transition-colors">
-                                <td className="p-3 text-sm font-medium text-slate-700">{item.nama}</td>
-                                <td className="p-3 text-sm text-slate-400">/{item.satuan}</td>
-                                <td className="p-3 text-sm font-bold text-emerald-600 text-right">
-                                    Rp {new Intl.NumberFormat('id-ID').format(item.harga)}
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-            </div>
-        </div>
+      <div className="w-full p-8 flex items-center justify-center text-slate-500 font-medium animate-pulse gap-2">
+        <RiLoader4Line className="animate-spin text-lg" />
+        {locLoading ? 'Mendeteksi lokasi Anda...' : 'Memuat data harga pasar...'}
+      </div>
     );
+  }
+
+  return (
+    <div className="space-y-3 animate-fade-in">
+      
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between pb-1">
+        <div>
+          <h2 className="text-base font-extrabold text-slate-800 font-['Montserrat_Alternates',sans-serif] flex items-center gap-1.5">
+            <RiLineChartLine /> Harga Komoditas Pasar
+          </h2>
+          {lokasiLabel ? (
+            <p className="text-xs text-emerald-700 font-semibold mt-0.5 flex items-center gap-1">
+              <RiMapPin2Fill /> Pasar terdekat: {lokasiLabel}
+            </p>
+          ) : locError ? (
+            <p className="text-xs text-amber-600 mt-0.5 flex items-center gap-1">
+              <RiGlobalLine /> Lokasi tidak terdeteksi — menampilkan data nasional
+            </p>
+          ) : (
+            <p className="text-xs text-slate-400 mt-0.5">Harga sesuai pasar terdekat Anda</p>
+          )}
+        </div>
+        <div className="flex items-center gap-2 mt-2 sm:mt-0 shrink-0">
+          {waktuUpdate && (
+            <span className="text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200 flex items-center gap-1">
+              <RiTimeLine /> {waktuUpdate}
+            </span>
+          )}
+          <button
+            onClick={refetch}
+            className="text-[11px] font-semibold text-slate-500 bg-slate-100 hover:bg-slate-200 px-3 py-1 rounded-full border border-slate-200 transition-all active:scale-95 flex items-center gap-1"
+          >
+            <RiRefreshLine /> Refresh
+          </button>
+        </div>
+      </div>
+
+      
+      <div className="relative">
+        <input
+          type="text"
+          placeholder="Cari komoditas atau wilayah..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="w-full bg-white border border-slate-200 rounded-2xl pl-10 pr-4 py-2.5 text-xs font-medium focus:ring-2 focus:ring-emerald-500 outline-none shadow-2xs transition-all"
+        />
+        <RiSearchLine className="w-4 h-4 text-slate-400 absolute left-3.5 top-3 pointer-events-none" />
+        {searchQuery && (
+          <button
+            onClick={() => setSearchQuery('')}
+            className="absolute right-3 top-2.5 text-xs text-slate-400 hover:text-slate-600 bg-slate-100 rounded-full w-5 h-5 flex items-center justify-center font-bold"
+          ><RiCloseLine /></button>
+        )}
+      </div>
+
+      
+      {(isFallback || pricesError) && (
+        <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-[11px] text-amber-800 flex items-center gap-1.5">
+          <RiLightbulbFlashLine className="shrink-0 text-base" />
+          <span>
+            {pricesError ? 'Koneksi gagal — ' : 'Data pasar belum tersedia — '}
+            Menampilkan harga referensi.
+          </span>
+        </div>
+      )}
+
+      
+      <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
+        <table className="w-full text-left border-collapse">
+          <thead>
+            <tr className="border-b border-slate-200 bg-slate-50/80">
+              <th className="p-3.5 text-[11px] font-bold text-slate-500 uppercase tracking-wide">Komoditas</th>
+              <th className="p-3.5 text-[11px] font-bold text-slate-500 uppercase tracking-wide hidden sm:table-cell">Wilayah</th>
+              <th className="p-3.5 text-[11px] font-bold text-slate-500 uppercase tracking-wide text-right">Harga / Sat.</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-slate-100">
+            {filteredHarga.map((item, idx) => (
+              <tr key={item.id ?? idx} className="hover:bg-emerald-50/30 transition-colors">
+                <td className="p-3.5">
+                  <div className="flex items-center gap-2.5">
+                    <span className="text-xl leading-none text-emerald-600">
+                      {item.nama.includes('Tomat') ? <RiPlantFill /> :
+                       item.nama.includes('Cabai') ? <RiLeafFill /> :
+                       item.nama.includes('Padi') ? <RiSeedlingFill /> :
+                       <RiLeafFill />}
+                    </span>
+                    <span className="text-xs font-bold text-slate-800">{item.nama}</span>
+                  </div>
+                </td>
+                <td className="p-3.5 text-xs text-slate-400 font-medium hidden sm:table-cell">
+                  {item.wilayah || '—'}
+                </td>
+                <td className="p-3.5 text-right">
+                  <span className="text-xs font-extrabold text-emerald-600">
+                    Rp {new Intl.NumberFormat('id-ID').format(item.harga)}
+                  </span>
+                  <span className="text-[11px] text-slate-400">/{item.satuan}</span>
+                  <TrendArrow perubahan={item.perubahan} />
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        {filteredHarga.length === 0 && (
+          <div className="p-6 text-center text-xs text-slate-400">
+            Tidak ditemukan komoditas dengan kata kunci tersebut.
+          </div>
+        )}
+      </div>
+
+      {isFallback && (
+        <p className="text-center text-[10px] text-slate-300 pb-1">
+          Data referensi • Aktifkan lokasi untuk harga pasar terdekat
+        </p>
+      )}
+    </div>
+  );
 }

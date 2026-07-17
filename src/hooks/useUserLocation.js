@@ -1,82 +1,78 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Geolocation } from '@capacitor/geolocation';
-
-/** @returns {{ provinsi: string|null, kecamatan: string|null, loading: boolean, error: string|null, refetch: () => void }} */
 
 export default function useUserLocation() {
   const [provinsi, setProvinsi] = useState(null);
   const [kecamatan, setKecamatan] = useState(null);
+  const [kota, setKota] = useState(null);
+  const [lat, setLat] = useState(null);
+  const [lon, setLon] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const fetchLocation = useCallback(async () => {
+  const fetchLocation = useCallback(() => {
     setLoading(true);
     setError(null);
 
-    try {
-      const permStatus = await Geolocation.checkPermissions();
-      
-      if (permStatus.location === 'denied') {
-        const reqResult = await Geolocation.requestPermissions();
-        if (reqResult.location === 'denied') {
-          throw new Error('Izin lokasi ditolak. Silakan pilih lokasi secara manual.');
-        }
-      }
-
-      const position = await Geolocation.getCurrentPosition({
-        enableHighAccuracy: false, 
-        timeout: 10000,
-      });
-
-      const { latitude, longitude } = position.coords;
-
-      const response = await fetch(
-        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=14&addressdetails=1&accept-language=id`,
-        {
-          headers: {
-            'User-Agent': 'GoraApp/1.0 (contact@garuda.com)',
-          },
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error('Gagal mendapatkan informasi lokasi.');
-      }
-
-      const data = await response.json();
-      const address = data.address || {};
-
-      const prov = address.state || address.province || null;
-      
-      const kec =
-        address.suburb ||
-        address.city_district ||
-        address.village ||
-        address.town ||
-        address.city ||
-        null;
-
-      setProvinsi(prov);
-      setKecamatan(kec);
-    } catch (err) {
-      console.warn('[useUserLocation]', err);
-      setError(err.message || 'Tidak dapat mendeteksi lokasi.');
-      setProvinsi(null);
-      setKecamatan(null);
-    } finally {
+    if (!navigator.geolocation) {
+      setError('Browser tidak mendukung Geolocation.');
       setLoading(false);
+      return;
     }
+
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const { latitude, longitude } = position.coords;
+        setLat(latitude);
+        setLon(longitude);
+
+        try {
+          const response = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=14&addressdetails=1&accept-language=id`,
+            { headers: { 'User-Agent': 'GoraApp/1.0 (contact@garuda.com)' } }
+          );
+
+          if (!response.ok) throw new Error('Gagal memuat data lokasi.');
+
+          const data = await response.json();
+          const address = data.address || {};
+
+          const prov = address.state || address.province || null;
+          const kec =
+            address.suburb ||
+            address.city_district ||
+            address.village ||
+            address.town ||
+            null;
+          const kot = address.city || address.regency || address.county || null;
+
+          setProvinsi(prov);
+          setKecamatan(kec);
+          setKota(kot);
+        } catch (err) {
+          console.warn('[useUserLocation] Reverse geocode gagal:', err.message);
+          setError('Tidak dapat menentukan nama wilayah dari koordinat.');
+        } finally {
+          setLoading(false);
+        }
+      },
+      (err) => {
+        console.warn('[useUserLocation] Geolocation error:', err.message);
+        const msg =
+          err.code === 1
+            ? 'Izin lokasi ditolak. Aktifkan lokasi di pengaturan browser.'
+            : err.code === 2
+            ? 'Lokasi tidak tersedia saat ini.'
+            : 'Timeout mendapatkan lokasi.';
+        setError(msg);
+        setLoading(false);
+      },
+      { enableHighAccuracy: false, timeout: 10000, maximumAge: 60000 }
+    );
   }, []);
 
   useEffect(() => {
     fetchLocation();
   }, [fetchLocation]);
 
-  return {
-    provinsi,
-    kecamatan,
-    loading,
-    error,
-    refetch: fetchLocation,
-  };
+  return { provinsi, kecamatan, kota, lat, lon, loading, error, refetch: fetchLocation };
 }
