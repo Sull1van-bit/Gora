@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { RiCloseLine, RiMapPinLine, RiArrowDownSLine, RiCalendarLine } from 'react-icons/ri';
 import useUserLocation from '../../hooks/useUserLocation';
 
 export default function AddPlotModal({ isOpen, onClose, onSave, komoditasList }) {
@@ -50,7 +51,7 @@ export default function AddPlotModal({ isOpen, onClose, onSave, komoditasList })
             className="w-8 h-8 flex items-center justify-center hover:opacity-80 active:scale-90 transition-all z-10"
             aria-label="Tutup"
           >
-            <img src="/assets/figma/addplot/close_x.svg" className="w-4 h-4 shrink-0" alt="Close" />
+            <RiCloseLine className="w-5 h-5 text-[#3c3b3b] shrink-0" />
           </button>
           <h2 className="absolute inset-0 flex items-center justify-center font-['Montserrat_Alternates',sans-serif] font-bold text-[20px] text-[#3c3b3b] pointer-events-none">
             Lahan Baru
@@ -90,7 +91,7 @@ export default function AddPlotModal({ isOpen, onClose, onSave, komoditasList })
                 className="w-full bg-white rounded-[10px] h-[40px] pl-3.5 pr-9 shadow-[0px_1px_2px_rgba(0,0,0,0.08)] border border-slate-100 text-[#3c3b3b] text-xs font-medium focus:ring-1 focus:ring-[#4c8644] outline-none transition-all"
               />
               <div className="absolute right-3 pointer-events-none flex items-center justify-center">
-                <img src="/assets/figma/addplot/location_pin.svg" className="w-3 h-3.5 shrink-0" alt="" />
+                <RiMapPinLine className="w-4 h-4 text-[#8f8e94] shrink-0" />
               </div>
             </div>
           </div>
@@ -127,7 +128,7 @@ export default function AddPlotModal({ isOpen, onClose, onSave, komoditasList })
                   <option value="Are">Are</option>
                 </select>
                 <div className="absolute right-2.5 pointer-events-none flex items-center justify-center">
-                  <img src="/assets/figma/addplot/dropdown_arrow.svg" className="w-4 h-4 shrink-0" alt="" />
+                  <RiArrowDownSLine className="w-4 h-4 text-[#8f8e94] shrink-0" />
                 </div>
               </div>
             </div>
@@ -146,12 +147,12 @@ export default function AddPlotModal({ isOpen, onClose, onSave, komoditasList })
               >
                 {komoditasList?.map((k) => (
                   <option key={k.id} value={k.id}>
-                    {k.icon} {k.nama}
+                    {k.nama}
                   </option>
                 ))}
               </select>
               <div className="absolute right-3 pointer-events-none flex items-center justify-center">
-                <img src="/assets/figma/addplot/dropdown_arrow.svg" className="w-4 h-4 shrink-0" alt="" />
+                <RiArrowDownSLine className="w-4 h-4 text-[#8f8e94] shrink-0" />
               </div>
             </div>
           </div>
@@ -170,7 +171,7 @@ export default function AddPlotModal({ isOpen, onClose, onSave, komoditasList })
                 className="w-full bg-white rounded-[10px] h-[40px] pl-3.5 pr-10 shadow-[0px_1px_2px_rgba(0,0,0,0.08)] border border-slate-100 text-[#3c3b3b] text-xs font-medium focus:ring-1 focus:ring-[#4c8644] outline-none transition-all"
               />
               <div className="absolute right-3 pointer-events-none flex items-center justify-center">
-                <img src="/assets/figma/addplot/calendar.svg" className="w-3.5 h-3.5 shrink-0" alt="" />
+                <RiCalendarLine className="w-4 h-4 text-[#8f8e94] shrink-0" />
               </div>
             </div>
           </div>

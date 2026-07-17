@@ -1,4 +1,5 @@
 import React from 'react';
+import UniversalIcon from '../../utils/iconHelper';
 
 export default function PlotCardFull({ plot, onSelect }) {
   const getStatusBadge = (status) => {
@@ -41,9 +42,7 @@ export default function PlotCardFull({ plot, onSelect }) {
 
       {/* Overlapping Circular Commodity Badge */}
       <div className="size-[55px] bg-[#fbf9f3] rounded-full absolute top-[70px] sm:top-[82px] left-[10px] shadow-[0px_2px_4px_rgba(0,0,0,0.1)] flex items-center justify-center z-10 border-2 border-[#fbf9f3]">
-        <span className="text-[28px] leading-none select-none">
-          {plot.komoditas_icon || '🌾'}
-        </span>
+        <UniversalIcon icon={plot.komoditas_icon || 'rice'} className="w-7 h-7 text-emerald-600" />
       </div>
 
       {/* Card Body */}

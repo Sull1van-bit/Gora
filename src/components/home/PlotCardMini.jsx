@@ -1,4 +1,6 @@
 import React from 'react';
+import { RiCalendar2Line } from 'react-icons/ri';
+import UniversalIcon from '../../utils/iconHelper';
 
 export default function PlotCardMini({ plot, onSelect }) {
   const isUrgentOrAttention = plot.status === 'urgent' || plot.status === 'attention';
@@ -27,9 +29,9 @@ export default function PlotCardMini({ plot, onSelect }) {
           className="w-full h-full object-cover rounded-t-[20px] group-hover:scale-105 transition-transform duration-300"
           onError={(e) => { e.target.src = '/assets/figma/image9.png'; }}
         />
-        {/* Overlapping circular emoji badge */}
-        <div className="-bottom-3.5 left-2.5 w-7 h-7 rounded-full bg-white shadow-sm flex items-center justify-center text-sm absolute z-10 border border-slate-100">
-          {plot.komoditas_icon || '🌱'}
+        {/* Overlapping circular icon badge */}
+        <div className="-bottom-3.5 left-2.5 w-7 h-7 rounded-full bg-white shadow-sm flex items-center justify-center absolute z-10 border border-slate-100">
+          <UniversalIcon icon={plot.komoditas_icon || 'plant'} className="w-4 h-4 text-emerald-600" />
         </div>
       </div>
 
@@ -61,7 +63,7 @@ export default function PlotCardMini({ plot, onSelect }) {
 
           {/* Harvest Info */}
           <div className="flex items-center gap-1 text-[9px] font-['Montserrat_Alternates',sans-serif] text-[#3c3b3b] mt-1.5">
-            <span>📅</span>
+            <RiCalendar2Line className="w-3 h-3 text-slate-500 shrink-0" />
             <span>Panen {daysToHarvest} hari lagi</span>
           </div>
         </div>

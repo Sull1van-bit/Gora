@@ -1,24 +1,42 @@
 import React from 'react';
+import { RiAlertFill, RiTimeFill, RiCheckboxCircleFill } from 'react-icons/ri';
+import UniversalIcon from '../../utils/iconHelper';
 
 export default function ActionItemRow({ action, onComplete, onSelectPlot }) {
+  const getPriorityTextColor = (priority) => {
+    switch (priority?.toLowerCase()) {
+      case 'high':
+        return 'text-[#ce4949]';
+      case 'medium':
+        return 'text-[#d89710]';
+      case 'low':
+        return 'text-[#3a6c3d]';
+      default:
+        return 'text-slate-800';
+    }
+  };
+
   const getBadgeConfig = (status) => {
     switch (status) {
       case 'overdue':
         return {
-          label: '🔴 Overdue',
+          icon: <RiAlertFill className="w-3 h-3 text-rose-600 inline mr-1" />,
+          label: 'Overdue',
           badgeClass: 'bg-rose-100 text-rose-700 border-rose-300',
           accent: 'border-l-4 border-l-rose-500',
         };
       case 'today': 
         return {
-          label: '🟡 Due Today',
+          icon: <RiTimeFill className="w-3 h-3 text-amber-600 inline mr-1" />,
+          label: 'Due Today',
           badgeClass: 'bg-amber-100 text-amber-800 border-amber-300',
           accent: 'border-l-4 border-l-amber-500',
         };
       case 'soon':
       default:
         return {
-          label: '🟢 Due Soon',
+          icon: <RiCheckboxCircleFill className="w-3 h-3 text-emerald-600 inline mr-1" />,
+          label: 'Due Soon',
           badgeClass: 'bg-emerald-100 text-emerald-800 border-emerald-300',
           accent: 'border-l-4 border-l-emerald-500',
         };
@@ -50,11 +68,12 @@ export default function ActionItemRow({ action, onComplete, onSelectPlot }) {
         className="flex-1 min-w-0 cursor-pointer"
       >
         <div className="flex items-center justify-between gap-2 mb-1">
-          <span className="text-xs font-bold text-slate-800 tracking-tight leading-tight">
+          <span className={`text-xs font-bold tracking-tight leading-tight ${getPriorityTextColor(action.priority)}`}>
             {action.title}
           </span>
-          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border shrink-0 ${config.badgeClass}`}>
-            {config.label}
+          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border shrink-0 flex items-center ${config.badgeClass}`}>
+            {config.icon}
+            <span>{config.label}</span>
           </span>
         </div>
 
@@ -64,7 +83,7 @@ export default function ActionItemRow({ action, onComplete, onSelectPlot }) {
 
         <div className="flex items-center justify-between text-[11px] text-slate-400 font-medium">
           <span className="inline-flex items-center gap-1 bg-slate-50 px-2 py-0.5 rounded-md text-slate-600 font-semibold border border-slate-200/60">
-            <span>{action.komoditas_icon || '🌱'}</span>
+            <UniversalIcon icon={action.komoditas_icon || 'plant'} className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
             <span className="truncate max-w-[150px]">{action.plot_name}</span>
           </span>
           <span className="text-slate-400">{action.due_text}</span>

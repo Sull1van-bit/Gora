@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { RiEdit2Line, RiCloseLine, RiCheckLine, RiWaterFlashLine, RiPlantLine, RiSearchEyeLine, RiScissorsCutLine } from 'react-icons/ri';
+import UniversalIcon from '../../utils/iconHelper';
 
 export default function LogActivityModal({ plot, isOpen, onClose, onLog }) {
   const [activityType, setActivityType] = useState('Watering');
@@ -8,11 +10,11 @@ export default function LogActivityModal({ plot, isOpen, onClose, onLog }) {
   if (!isOpen || !plot) return null;
 
   const activityTypes = [
-    { id: 'Watering', label: '💧 Penyiraman (Watering)' },
-    { id: 'Fertilizing', label: '🌱 Pemupukan (Fertilizing)' },
-    { id: 'Pest Inspection', label: '🔍 Inspeksi Hama (Pest Check)' },
-    { id: 'Pruning', label: '✂️ Pemangkasan (Pruning)' },
-    { id: 'Harvesting', label: '🌾 Panen (Harvesting)' },
+    { id: 'Watering', label: 'Penyiraman (Watering)', icon: RiWaterFlashLine },
+    { id: 'Fertilizing', label: 'Pemupukan (Fertilizing)', icon: RiPlantLine },
+    { id: 'Pest Inspection', label: 'Inspeksi Hama (Pest Check)', icon: RiSearchEyeLine },
+    { id: 'Pruning', label: 'Pemangkasan (Pruning)', icon: RiScissorsCutLine },
+    { id: 'Harvesting', label: 'Panen (Harvesting)', icon: 'rice', isUniversal: true },
   ];
 
   const handleSubmit = (e) => {
@@ -37,18 +39,20 @@ export default function LogActivityModal({ plot, isOpen, onClose, onLog }) {
       >
         <div className="flex items-center justify-between border-b border-slate-100 pb-4 mb-5">
           <div>
-            <h2 className="text-lg font-black text-slate-900 font-['Montserrat_Alternates',sans-serif]">
-              ✍️ Catat Aktivitas Lahan
+            <h2 className="text-lg font-black text-slate-900 font-['Montserrat_Alternates',sans-serif] flex items-center gap-1.5">
+              <RiEdit2Line className="w-5 h-5 shrink-0 text-emerald-600" />
+              <span>Catat Aktivitas Lahan</span>
             </h2>
-            <p className="text-xs text-slate-500 font-medium">
-              {plot.komoditas_icon} {plot.plot_name}
-            </p>
+            <div className="flex items-center gap-1 text-xs text-slate-500 font-medium mt-1">
+              <UniversalIcon icon={plot.komoditas_icon || 'rice'} className="w-4 h-4 text-emerald-600 shrink-0" />
+              <span>{plot.plot_name}</span>
+            </div>
           </div>
           <button
             onClick={onClose}
             className="w-8 h-8 rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 flex items-center justify-center font-bold"
           >
-            ✕
+            <RiCloseLine className="w-5 h-5" />
           </button>
         </div>
 
@@ -58,21 +62,31 @@ export default function LogActivityModal({ plot, isOpen, onClose, onLog }) {
               Jenis Aktivitas *
             </label>
             <div className="grid grid-cols-1 gap-2">
-              {activityTypes.map((act) => (
-                <button
-                  key={act.id}
-                  type="button"
-                  onClick={() => setActivityType(act.id)}
-                  className={`w-full text-left px-3.5 py-2.5 rounded-xl border text-sm font-semibold transition-all flex items-center justify-between ${
-                    activityType === act.id
-                      ? 'bg-emerald-50 border-emerald-500 text-emerald-800 shadow-2xs font-bold'
-                      : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'
-                  }`}
-                >
-                  <span>{act.label}</span>
-                  {activityType === act.id && <span className="text-emerald-600 font-bold">✓</span>}
-                </button>
-              ))}
+              {activityTypes.map((act) => {
+                const Icon = act.icon;
+                return (
+                  <button
+                    key={act.id}
+                    type="button"
+                    onClick={() => setActivityType(act.id)}
+                    className={`w-full text-left px-3.5 py-2.5 rounded-xl border text-sm font-semibold transition-all flex items-center justify-between ${
+                      activityType === act.id
+                        ? 'bg-emerald-50 border-emerald-500 text-emerald-800 shadow-2xs font-bold'
+                        : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2">
+                      {act.isUniversal ? (
+                        <UniversalIcon icon={act.icon} className="w-4 h-4 text-emerald-600 shrink-0" />
+                      ) : (
+                        <Icon className="w-4 h-4 text-emerald-600 shrink-0" />
+                      )}
+                      <span>{act.label}</span>
+                    </div>
+                    {activityType === act.id && <RiCheckLine className="w-5 h-5 text-emerald-600 shrink-0" />}
+                  </button>
+                );
+              })}
             </div>
           </div>
 

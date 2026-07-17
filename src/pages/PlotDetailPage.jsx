@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { RiAlertFill, RiErrorWarningLine } from 'react-icons/ri';
 import LogActivityModal from '../components/plots/LogActivityModal';
 import ReportIssueModal from '../components/plots/ReportIssueModal';
 
@@ -20,7 +21,7 @@ export default function PlotDetailPage({
   if (!plot) {
     return (
       <div className="bg-white rounded-2xl p-8 text-center border border-slate-200 shadow-xs mt-6 mx-4">
-        <span className="text-4xl block mb-2">⚠️</span>
+        <RiAlertFill className="w-12 h-12 text-amber-500 block mx-auto mb-2" />
         <h3 className="font-bold text-slate-800 text-sm font-['Montserrat_Alternates',sans-serif]">Data Lahan Tidak Ditemukan</h3>
         <p className="text-xs text-slate-400 mt-1">Lahan yang Anda cari mungkin telah dihapus atau dipindahkan.</p>
         <button
@@ -294,7 +295,8 @@ export default function PlotDetailPage({
             onClick={() => setIsReportOpen(true)}
             className="text-[10px] font-['Montserrat_Alternates',sans-serif] font-bold text-rose-600 hover:underline flex items-center gap-1 active:scale-95"
           >
-            ⚠️ Lapor Masalah
+            <RiErrorWarningLine className="w-3.5 h-3.5 shrink-0" />
+            <span>Lapor Masalah</span>
           </button>
         </div>
 

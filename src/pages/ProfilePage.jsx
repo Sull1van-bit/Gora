@@ -1,29 +1,38 @@
 import React, { useState } from 'react';
+import { RiMapPinLine, RiRefreshLine, RiSettings4Line, RiInformationLine } from 'react-icons/ri';
 
-export default function ProfilePage({ plots, onResetDemoData, provinsi, kecamatan, refetchLocation }) {
+export default function ProfilePage({ totalArea = 5150, plots = [], onResetDemoData, refetchLocation, locationData }) {
   const [notifEnabled, setNotifEnabled] = useState(true);
   const [offlineSync, setOfflineSync] = useState(true);
   const [language, setLanguage] = useState('id'); // 'id' | 'en'
 
-  const totalArea = plots.reduce((acc, p) => acc + Number(p.area || 0), 0);
+  const { kecamatan, provinsi } = locationData || {};
 
   return (
-    <div className="space-y-4 animate-fade-in pb-6">
-      {/* Profile Header Card */}
-      <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-emerald-950 text-white rounded-3xl p-5 shadow-lg relative overflow-hidden">
-        <div className="flex items-center gap-4">
-          <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-emerald-500 to-teal-400 flex items-center justify-center text-2xl font-black text-white shadow-md border-2 border-white/20">
-            BS
+    <div className="space-y-4 animate-fade-in pb-8">
+      {/* Profile Header Banner */}
+      <div className="bg-gradient-to-br from-[#28502d] via-[#3a6c3d] to-[#1e3d22] text-white rounded-3xl p-5 shadow-lg relative overflow-hidden">
+        <div className="absolute -right-10 -bottom-10 w-40 h-40 rounded-full bg-white/10 pointer-events-none blur-2xl" />
+
+        <div className="flex items-center gap-4 relative z-10">
+          <div className="w-16 h-16 rounded-full border-2 border-white/80 overflow-hidden shadow-md shrink-0 bg-emerald-800">
+            <img
+              src="/assets/figma/image9.png"
+              alt="Avatar Petani"
+              className="w-full h-full object-cover"
+              onError={(e) => { e.target.src = 'https://via.placeholder.com/64?text=Petani'; }}
+            />
           </div>
           <div>
-            <h1 className="text-xl font-black font-['Montserrat_Alternates',sans-serif]">
+            <h1 className="text-lg font-black font-['Montserrat_Alternates',sans-serif]">
               Budi Santoso
             </h1>
             <p className="text-xs text-emerald-300 font-medium mt-0.5">
               Kelompok Tani Garuda Sukses • ID: GR-8421
             </p>
-            <div className="inline-flex items-center gap-1 text-[11px] bg-white/10 px-2.5 py-0.5 rounded-full mt-2 border border-white/15">
-              <span>📍 {kecamatan || 'Bumiaji'}, {provinsi || 'Jawa Timur'}</span>
+            <div className="inline-flex items-center gap-1.5 text-[11px] bg-white/10 px-2.5 py-0.5 rounded-full mt-2 border border-white/15">
+              <RiMapPinLine className="w-3.5 h-3.5 text-emerald-300 shrink-0" />
+              <span>{kecamatan || 'Bumiaji'}, {provinsi || 'Jawa Timur'}</span>
             </div>
           </div>
         </div>
@@ -45,9 +54,12 @@ export default function ProfilePage({ plots, onResetDemoData, provinsi, kecamata
 
       {/* Settings Section 1: Lokasi & Sensor */}
       <div className="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-xs space-y-3.5">
-        <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider border-b border-slate-100 pb-2">
-          📍 Lokasi GPS & Perangkat Capacitor
-        </h3>
+        <div className="flex items-center gap-1.5 border-b border-slate-100 pb-2">
+          <RiMapPinLine className="w-4 h-4 text-emerald-600 shrink-0" />
+          <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+            Lokasi GPS & Perangkat Capacitor
+          </h3>
+        </div>
 
         <div className="flex items-center justify-between text-xs">
           <div>
@@ -56,18 +68,22 @@ export default function ProfilePage({ plots, onResetDemoData, provinsi, kecamata
           </div>
           <button
             onClick={refetchLocation}
-            className="px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold rounded-xl border border-emerald-200 text-xs active:scale-95 transition-all"
+            className="px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold rounded-xl border border-emerald-200 text-xs active:scale-95 transition-all flex items-center gap-1"
           >
-            🔄 Refresh GPS
+            <RiRefreshLine className="w-3.5 h-3.5 shrink-0" />
+            <span>Refresh GPS</span>
           </button>
         </div>
       </div>
 
       {/* Settings Section 2: Preferensi & Offline Mode */}
       <div className="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-xs space-y-3.5">
-        <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider border-b border-slate-100 pb-2">
-          ⚙️ Preferensi Aplikasi
-        </h3>
+        <div className="flex items-center gap-1.5 border-b border-slate-100 pb-2">
+          <RiSettings4Line className="w-4 h-4 text-emerald-600 shrink-0" />
+          <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+            Preferensi Aplikasi
+          </h3>
+        </div>
 
         {/* Notifikasi Toggle */}
         <div className="flex items-center justify-between text-xs py-1">
@@ -120,9 +136,12 @@ export default function ProfilePage({ plots, onResetDemoData, provinsi, kecamata
 
       {/* Settings Section 3: Akun & Tentang */}
       <div className="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-xs space-y-3 text-xs">
-        <h3 className="font-bold text-slate-700 uppercase tracking-wider border-b border-slate-100 pb-2">
-          ℹ️ Tentang Aplikasi
-        </h3>
+        <div className="flex items-center gap-1.5 border-b border-slate-100 pb-2">
+          <RiInformationLine className="w-4 h-4 text-emerald-600 shrink-0" />
+          <h3 className="font-bold text-slate-700 uppercase tracking-wider">
+            Tentang Aplikasi
+          </h3>
+        </div>
         <div className="flex justify-between py-1">
           <span className="text-slate-400">Versi Aplikasi</span>
           <span className="font-bold text-slate-800">v0.1.0 (Capacitor Mobile Build)</span>
@@ -138,9 +157,10 @@ export default function ProfilePage({ plots, onResetDemoData, provinsi, kecamata
               onResetDemoData?.();
             }
           }}
-          className="w-full mt-3 py-2.5 bg-amber-50 hover:bg-amber-100 text-amber-700 font-bold rounded-xl border border-amber-200 transition-all text-center"
+          className="w-full mt-3 py-2.5 bg-amber-50 hover:bg-amber-100 text-amber-700 font-bold rounded-xl border border-amber-200 transition-all text-center flex items-center justify-center gap-1.5"
         >
-          🔄 Reset Data Demo
+          <RiRefreshLine className="w-4 h-4 shrink-0" />
+          <span>Reset Data Demo</span>
         </button>
 
         <button

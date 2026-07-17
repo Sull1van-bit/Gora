@@ -1,12 +1,14 @@
 import React from 'react';
+import { RiNewspaperLine } from 'react-icons/ri';
 
 export default function ArticlesView({ newsList, onSelectArticle }) {
   return (
     <div className="space-y-3.5 animate-fade-in">
       <div className="flex items-center justify-between px-1">
         <div>
-          <h2 className="text-base font-extrabold text-slate-800 font-['Montserrat_Alternates',sans-serif]">
-            📰 Berita & Panduan Tani
+          <h2 className="text-base font-extrabold text-slate-800 font-['Montserrat_Alternates',sans-serif] flex items-center gap-1.5">
+            <RiNewspaperLine className="w-5 h-5 text-emerald-600 shrink-0" />
+            <span>Berita & Panduan Tani</span>
           </h2>
           <p className="text-xs text-slate-500">Tips agronomi & perkembangan pasar pertanian</p>
         </div>

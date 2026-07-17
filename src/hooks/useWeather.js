@@ -6,10 +6,10 @@ import { WEATHER_PREVIEW } from '../services/dataStore';
 // request fails (offline, permission denied, etc). Keeps the UI populated
 // with sensible placeholder data instead of blank/broken widgets.
 const FALLBACK_HOURLY = [
-    { time: '08:00', temp: 26, icon: '🌤️', label: 'Pagi' },
-    { time: '12:00', temp: 30, icon: '☀️', label: 'Siang' },
-    { time: '16:00', temp: 28, icon: '🌤️', label: 'Sore' },
-    { time: '20:00', temp: 24, icon: '🌙', label: 'Malam' },
+    { time: '08:00', temp: 26, icon: 'partly_cloudy', label: 'Pagi' },
+    { time: '12:00', temp: 30, icon: 'sun', label: 'Siang' },
+    { time: '16:00', temp: 28, icon: 'partly_cloudy', label: 'Sore' },
+    { time: '20:00', temp: 24, icon: 'moon', label: 'Malam' },
 ];
 
 const DAY_LABELS = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];

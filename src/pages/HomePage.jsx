@@ -1,5 +1,7 @@
 import React from 'react';
 import PlotCardMini from '../components/home/PlotCardMini';
+import { RiMapPinLine, RiAddLine, RiWaterFlashLine, RiDropLine, RiCheckboxCircleLine } from 'react-icons/ri';
+import UniversalIcon from '../utils/iconHelper';
 import useUserLocation from '../hooks/useUserLocation';
 
 export default function HomePage({
@@ -51,7 +53,7 @@ export default function HomePage({
   return (
     <div className="animate-fade-in space-y-0">
       {/* SECTION A: Curved Green Hero Banner (Bg Dark) */}
-      <section className="bg-gradient-to-t from-[#c6d5a2] to-[#25812a] rounded-b-[30px] pt-5 pb-16 px-6 relative overflow-hidden text-white shadow-xs">
+      <section className="bg-gradient-to-t from-[#c6d5a2] to-[#25812a] rounded-b-[30px] pt-5 pb-24 px-6 relative overflow-hidden text-white shadow-xs">
         <div className="relative z-10 flex flex-col justify-between max-w-sm">
           <div>
             <p className="text-[#fbf9f3] text-[13px] sm:text-[15px] font-['Montserrat_Alternates',sans-serif] font-medium tracking-tight">
@@ -76,10 +78,10 @@ export default function HomePage({
       </section>
 
       {/* SECTION B: Floating Weather Card */}
-      <section className="-mt-11 mx-4 bg-[#fbf9f3] rounded-[20px] shadow-[0px_4px_30px_rgba(0,0,0,0.08)] p-4 relative z-20 border border-slate-100/60 transition-all">
+      <section className="-mt-16 mx-4 bg-[#fbf9f3] rounded-[20px] shadow-[0px_4px_30px_rgba(0,0,0,0.08)] p-4 relative z-20 border border-slate-100/60 transition-all">
         {/* Location Row */}
         <div className="flex items-center gap-1 font-['Montserrat_Alternates',sans-serif] font-semibold text-[11px] text-[#3c3b3b] mb-3">
-          <span>📍</span>
+          <RiMapPinLine className="w-4 h-4 text-slate-500 shrink-0" />
           <span>
             {locLoading
               ? 'Mendeteksi lokasi...'
@@ -158,11 +160,11 @@ export default function HomePage({
           ))}
 
           {/* Tambah Tanaman Card */}
-          <div
+          <div 
             onClick={onOpenAddPlot}
             className="w-[130px] sm:w-[140px] border-2 border-dashed border-[#8f8e94]/50 rounded-[20px] p-4 shrink-0 flex flex-col items-center justify-center gap-2 cursor-pointer bg-white/40 hover:bg-white/80 transition-all active:scale-95 group snap-start"
           >
-            <span className="text-[32px] text-[#6f6e72] font-light leading-none group-hover:scale-110 transition-transform">+</span>
+            <RiAddLine className="w-8 h-8 text-[#6f6e72] group-hover:scale-110 transition-transform shrink-0" />
             <span className="text-[11px] font-['Montserrat_Alternates',sans-serif] font-semibold text-[#3c3b3b] text-center leading-tight">
               Tambah Tanaman
             </span>
@@ -188,7 +190,7 @@ export default function HomePage({
                   >
                     <div className="flex items-center gap-2.5 min-w-0">
                       <div className={`w-8 h-8 rounded-xl flex items-center justify-center text-sm shrink-0 ${idx === 0 ? 'bg-[#b4d7f1] text-blue-800' : 'bg-[#bcd4aa] text-emerald-800'}`}>
-                        {idx === 0 ? '🌊' : '🚿'}
+                        {idx === 0 ? <RiWaterFlashLine className="w-5 h-5 text-blue-600 shrink-0" /> : <RiDropLine className="w-5 h-5 text-emerald-600 shrink-0" />}
                       </div>
                       <div className="min-w-0">
                         <p className={`text-[11px] font-['Montserrat_Alternates',sans-serif] font-bold truncate transition-opacity group-hover:opacity-80 ${getPriorityTextColor(act.priority)}`}>
@@ -204,7 +206,7 @@ export default function HomePage({
                 ))
               ) : (
                 <div className="flex flex-col items-center justify-center h-full text-center py-2">
-                  <span className="text-2xl mb-1">🎉</span>
+                  <RiCheckboxCircleLine className="w-8 h-8 text-emerald-600 mb-1 mx-auto" />
                   <p className="text-[11px] font-bold text-[#28502d] font-['Montserrat_Alternates',sans-serif]">Semua perawatan hari ini telah diselesaikan</p>
                   <p className="text-[9px] text-[#6f6e72]">Lahan Anda dalam perawatan optimal.</p>
                 </div>
@@ -307,7 +309,7 @@ export default function HomePage({
               {komoditasList.slice(0, 2).map((kom, idx) => (
                 <div key={kom.id || idx} className="pt-1 flex items-center justify-between text-[11px] first:pt-0">
                   <div className="flex items-center gap-1.5 min-w-0">
-                    <span className="text-base shrink-0">{kom.icon || (idx === 0 ? '🍅' : '🌾')}</span>
+                    <UniversalIcon icon={kom.icon || (idx === 0 ? 'tomato' : 'rice')} className="w-4 h-4 text-emerald-600 shrink-0" />
                     <div className="min-w-0">
                       <p className="font-['Montserrat_Alternates',sans-serif] font-bold text-[#3c3b3b] leading-none text-[11px] truncate">{kom.nama ? kom.nama.split('(')[0] : 'Komoditas'}</p>
                       <p className="text-[9px] text-[#6f6e72]">IDR {kom.avgPrice ? new Intl.NumberFormat('id-ID').format(kom.avgPrice) : '15,000'}/{kom.satuan || 'kg'}</p>

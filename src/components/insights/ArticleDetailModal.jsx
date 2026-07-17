@@ -1,4 +1,5 @@
 import React from 'react';
+import { RiCalendarLine, RiTimeLine, RiCloseLine } from 'react-icons/ri';
 
 export default function ArticleDetailModal({ article, isOpen, onClose }) {
   if (!isOpen || !article) return null;
@@ -17,7 +18,7 @@ export default function ArticleDetailModal({ article, isOpen, onClose }) {
             onClick={onClose}
             className="w-8 h-8 rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 flex items-center justify-center font-bold"
           >
-            ✕
+            <RiCloseLine className="w-5 h-5" />
           </button>
         </div>
 
@@ -33,10 +34,16 @@ export default function ArticleDetailModal({ article, isOpen, onClose }) {
           {article.title}
         </h1>
 
-        <div className="flex items-center gap-2 text-xs text-slate-400 font-medium mb-4 pb-4 border-b border-slate-100">
-          <span>📅 {article.date}</span>
+        <div className="flex items-center gap-3 text-xs text-slate-400 font-medium mb-4 pb-4 border-b border-slate-100">
+          <span className="flex items-center gap-1.5">
+            <RiCalendarLine className="w-4 h-4 text-slate-400 shrink-0" />
+            <span>{article.date}</span>
+          </span>
           <span>•</span>
-          <span>⏱️ {article.readTime} dibaca</span>
+          <span className="flex items-center gap-1.5">
+            <RiTimeLine className="w-4 h-4 text-slate-400 shrink-0" />
+            <span>{article.readTime} dibaca</span>
+          </span>
         </div>
 
         <div className="text-xs text-slate-700 leading-relaxed whitespace-pre-line space-y-3 font-medium">

@@ -209,7 +209,7 @@ export default function useGoraData() {
       id: `hist-${Date.now()}`,
       plot_id: targetPlot.id,
       plot_name: targetPlot.plot_name,
-      komoditas_icon: '⚠️',
+      komoditas_icon: 'alert',
       activity_type: 'Issue Reported',
       title: `Laporan Masalah: ${issueData.title}`,
       notes: `Tingkat Keparahan: ${issueData.severity}. ${issueData.notes || ''}`,

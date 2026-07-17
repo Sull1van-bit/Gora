@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { RiLineChartLine, RiTimeLine, RiSearchLine, RiCloseLine, RiLightbulbLine, RiArrowUpSLine, RiArrowDownSLine } from 'react-icons/ri';
+import UniversalIcon from '../utils/iconHelper';
 import { supabase } from '../lib/supabaseClient';
 import { INITIAL_KOMODITAS } from '../services/dataStore';
 
@@ -32,52 +34,56 @@ export default function HargaKomoditas() {
             }
 
             const { data, error } = await supabase
-                .from('harga_harian')
-                .select(`
-                    id,
-                    harga,
-                    tanggal,
-                    komoditas:komoditas_id ( nama, satuan ),
-                    wilayah:wilayah_id ( provinsi, kota, kecamatan )
-                `)
+                .from('harga_pasar')
+                .select('*')
                 .eq('tanggal', today)
-                .order('harga', { ascending: false });
+                .order('nama_komoditas');
 
-            if (error) throw error;
-
-            if (data && data.length > 0) {
-                const uniqueData = [];
-                const seen = new Set();
-                
-                data.forEach((row, idx) => {
-                    const nama = row.komoditas?.nama || 'Tidak diketahui';
-                    if (!seen.has(nama)) {
-                        seen.add(nama);
-                        uniqueData.push({
-                            id: row.id || idx,
-                            nama,
-                            harga: row.harga,
-                            satuan: row.komoditas?.satuan || 'kg',
-                            wilayah: row.wilayah
-                                ? `${row.wilayah.kecamatan}, ${row.wilayah.kota}`
-                                : 'Tidak diketahui',
-                        });
-                    }
-                });
-                setDataHarga(uniqueData);
+            if (error || !data || data.length === 0) {
+                const fallbackFromDB = await fetchLatestAvailable();
+                if (fallbackFromDB.length > 0) {
+                    setDataHarga(fallbackFromDB);
+                } else {
+                    setDataHarga(fallbackData);
+                }
             } else {
-                setDataHarga(fallbackData);
-                setErrorMsg('Data Supabase hari ini belum tersedia — menampilkan harga referensi terkini.');
+                setDataHarga(data.map(item => ({
+                    id: item.id,
+                    nama: item.nama_komoditas,
+                    harga: item.harga,
+                    satuan: item.satuan || 'Kg',
+                    trend: item.trend || 'stable',
+                    icon: item.icon || 'rice',
+                    wilayah: item.wilayah || 'Pasar Induk Batu',
+                })));
             }
-
             setWaktuUpdate(new Date().toLocaleTimeString('id-ID'));
         } catch (err) {
-            console.warn('[HargaKomoditas] Menggunakan data referensi:', err.message);
-            setErrorMsg('Mode offline aktif — menampilkan harga referensi pasar terkini.');
+            console.error('Error fetching market prices:', err);
             setDataHarga(fallbackData);
+            setErrorMsg('Menggunakan data pasar referensi offline.');
         } finally {
             setLoading(false);
         }
+    };
+
+    const fetchLatestAvailable = async () => {
+        if (!supabase) return [];
+        const { data } = await supabase
+            .from('harga_pasar')
+            .select('*')
+            .order('tanggal', { ascending: false })
+            .limit(10);
+        if (!data) return [];
+        return data.map(item => ({
+            id: item.id,
+            nama: item.nama_komoditas,
+            harga: item.harga,
+            satuan: item.satuan || 'Kg',
+            trend: item.trend || 'stable',
+            icon: item.icon || 'rice',
+            wilayah: item.wilayah || 'Pasar Induk Batu',
+        }));
     };
 
     useEffect(() => {
@@ -86,13 +92,13 @@ export default function HargaKomoditas() {
 
     const filteredHarga = dataHarga.filter(item =>
         item.nama.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (item.wilayah && item.wilayah.toLowerCase().includes(searchQuery.toLowerCase()))
+        item.wilayah.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
     if (loading) {
         return (
-            <div className="w-full max-w-4xl p-8 mx-auto text-center text-slate-500 font-medium">
-                Memuat data harga pasar...
+            <div className="flex justify-center items-center py-12">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600"></div>
             </div>
         );
     }
@@ -101,15 +107,17 @@ export default function HargaKomoditas() {
         <div className="space-y-3 animate-fade-in">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between pb-2">
                 <div>
-                    <h2 className="text-base font-extrabold text-slate-800 font-['Montserrat_Alternates',sans-serif]">
-                        📈 Harga Komoditas Pasar (Market Insight)
+                    <h2 className="text-base font-extrabold text-slate-800 font-['Montserrat_Alternates',sans-serif] flex items-center gap-1.5">
+                        <RiLineChartLine className="w-5 h-5 text-emerald-600 shrink-0" />
+                        <span>Harga Komoditas Pasar (Market Insight)</span>
                     </h2>
                     <p className="text-xs text-slate-500">Pantau fluktuasi harga komoditas pertanian harian</p>
                 </div>
                 <div className="flex items-center gap-2 mt-2 sm:mt-0">
                     {waktuUpdate && (
-                        <span className="text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200">
-                            🕒 {waktuUpdate} WIB
+                        <span className="text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200 flex items-center gap-1.5">
+                            <RiTimeLine className="w-3.5 h-3.5 shrink-0" />
+                            <span>{waktuUpdate} WIB</span>
                         </span>
                     )}
                 </div>
@@ -119,27 +127,28 @@ export default function HargaKomoditas() {
             <div className="relative">
                 <input
                     type="text"
-                    placeholder="🔍 Cari komoditas atau wilayah pasar..."
+                    placeholder="Cari komoditas atau wilayah pasar..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="w-full bg-white border border-slate-200 rounded-2xl pl-10 pr-4 py-2.5 text-xs font-medium focus:ring-2 focus:ring-emerald-500 outline-none shadow-2xs transition-all"
                 />
-                <svg className="w-4 h-4 text-slate-400 absolute left-3.5 top-3 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
+                <RiSearchLine className="w-4 h-4 text-slate-400 absolute left-3.5 top-3 pointer-events-none" />
                 {searchQuery && (
                     <button
                         onClick={() => setSearchQuery('')}
                         className="absolute right-3 top-2.5 text-xs text-slate-400 hover:text-slate-600 bg-slate-100 rounded-full w-5 h-5 flex items-center justify-center font-bold"
                     >
-                        ✕
+                        <RiCloseLine className="w-4 h-4" />
                     </button>
                 )}
             </div>
 
             {errorMsg && (
                 <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-[11px] text-amber-800 flex items-center justify-between">
-                    <span>💡 {errorMsg}</span>
+                    <span className="flex items-center gap-1.5">
+                        <RiLightbulbLine className="w-4 h-4 text-amber-600 shrink-0" />
+                        <span>{errorMsg}</span>
+                    </span>
                     <button
                         onClick={() => { setLoading(true); ambilData(); }}
                         className="underline font-bold hover:text-amber-900 shrink-0 ml-2"
@@ -162,7 +171,7 @@ export default function HargaKomoditas() {
                         {filteredHarga.map((item, indeks) => (
                             <tr key={item.id || indeks} className="hover:bg-slate-50/70 transition-colors">
                                 <td className="p-3.5 text-xs font-bold text-slate-800 flex items-center gap-2">
-                                    <span className="text-xl">{item.icon || '📦'}</span>
+                                    <UniversalIcon icon={item.icon || 'rice'} className="w-5 h-5 text-emerald-600 shrink-0" />
                                     <span>{item.nama}</span>
                                 </td>
                                 <td className="p-3.5 text-xs text-slate-500 font-medium">
@@ -172,8 +181,8 @@ export default function HargaKomoditas() {
                                     Rp {new Intl.NumberFormat('id-ID').format(item.harga)}
                                     <span className="text-slate-400 font-normal">/{item.satuan}</span>
                                     {item.trend && (
-                                        <span className={`ml-1 font-bold ${item.trend === 'up' ? 'text-emerald-500' : item.trend === 'down' ? 'text-rose-500' : 'text-slate-400'}`}>
-                                            {item.trend === 'up' ? '↑' : item.trend === 'down' ? '↓' : '→'}
+                                        <span className={`inline-flex items-center ml-1 font-bold ${item.trend === 'up' ? 'text-emerald-500' : item.trend === 'down' ? 'text-rose-500' : 'text-slate-400'}`}>
+                                            {item.trend === 'up' ? <RiArrowUpSLine className="w-4 h-4 inline" /> : item.trend === 'down' ? <RiArrowDownSLine className="w-4 h-4 inline" /> : '—'}
                                         </span>
                                     )}
                                 </td>
